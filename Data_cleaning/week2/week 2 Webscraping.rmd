@@ -1,0 +1,92 @@
+---
+title: "Web Scraping"
+author: "MCCurcio"
+date: "12/22/2020"
+output: html_document
+---
+
+## Reading from The Web
+
+### Webscraping and APIs(later)
+
+- See [How Netflix Reverse-Engineered Hollywood](https://www.theatlantic.com/technology/archive/2014/01/how-netflix-reverse-engineered-hollywood/282679/)
+
+FOR Example: Webscraping off Google Scholar, Jeff Leek.
+https://scholar.google.com/citations?user=HI-I6C0AAAAJ&hl=en
+
+https://scholar.google.com/citations?user=HI-I6CoAAAAJ&Hl=en
+
+### Getting data off webpages using `readlines()`
+```{r}
+con = url("https://scholar.google.com/citations?user=HI-I6C0AAAAJ&hl=en")
+htmlCode = readLines(con)
+close(con)
+
+# htmlCode # If you want html code one can now go thru this file.
+```
+### Parsing with XML package
+```{r}
+library(XML)
+library(RCurl) 
+
+url <- "https://scholar.google.com/citations?user=HI-I6C0AAAAJ&hl=en"
+xData <- getURL(url)
+doc <- htmlTreeParse(xData, useInternalNodes = TRUE)
+
+xpathSApply(doc, "//title", xmlValue)
+```
+Should return list of citations...(?)
+```{r}
+xpathSApply(doc, "//td[@id='col-citedby']", xmlValue)
+```
+
+Using the `Get` command in `httr` package
+```{r}
+library(httr)
+
+html2 = GET(url)
+content2 = content(html2, as = "text") # Extract content
+
+## content(r) # automatically parses JSON
+
+parsed_html = htmlParse(content2, asText = TRUE)
+xpathSApply(parsed_html, "//title", xmlValue)
+```
+
+Accessing webpages with passwaords
+```{r}
+page1 = GET("http://httpbin.org/basic-auth/user/passwd")
+page1
+
+# Status 401 indicates that I hjave not been authenicated yet.
+```
+
+Example
+```{r}
+page2 = GET("http://httpbin.org/basic-auth/user/passwd",
+            authenticate("user", "passwd"))
+page2
+```
+### Using handles to access webpages
+
+Handles allow one to save the authenication along different processes.
+```{r}
+names(page2)
+```
+Authenicating allows you to save the cookies from `get` to `get`
+```{r}
+google = handle("http://google.com")
+page3 = GET(handle = google, path = "/")
+page4 = GET(handle = google, path = "search")
+```
+
+
+### See
+
+1. [R-bloggers](http://www.r-bloggers.com/?s=Web+Scraping)
+
+2. [httr package](https://cran.r-project.org/web/packages/httr/index.html)
+
+3. See info on APIs also!
+
+

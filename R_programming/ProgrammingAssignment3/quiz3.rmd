@@ -1,0 +1,63 @@
+---
+title: "quiz3"
+author: "MCCurcio"
+date: "12/16/2020"
+output: html_document
+---
+
+```{r 1}
+best("SC", "heart attack")
+```
+
+```{r 2}
+best("NY", "pneumonia")
+```
+
+
+WRONG
+```{r 3}
+best("AK", "pneumonia")
+```
+
+```{r 4}
+rankhospital("NC", "heart attack", "worst")
+```
+
+```{r 5}
+rankhospital("WA", "heart attack", 7)
+```
+
+
+
+```{r 6}
+rankhospital("TX", "pneumonia", 10)
+```
+
+
+
+```{r 7}
+rankhospital("NY", "heart attack", 7)
+```
+
+WRONG
+```{r 8}
+r <- rankall("heart attack", 4)
+as.character(subset(r, state == "HI")$hospital)
+```
+
+```{r 9}
+r <- rankall("pneumonia", "worst")
+as.character(subset(r, state == "NJ")$hospital)
+
+```
+
+
+WRONG
+```{r 10}
+r <- rankall("heart failure", 10)
+as.character(subset(r, state == "NV")$hospital)
+
+```
+
+
+

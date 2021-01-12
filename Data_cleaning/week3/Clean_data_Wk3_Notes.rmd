@@ -1,0 +1,642 @@
+---
+title: "Cleaning_data_Wk3_Notes"
+author: "MCCurcio"
+date: "12/29/2020"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    code_download: true
+---
+
+# Getting and Cleaning Data / Week 3 / 
+
+
+## Subsetting and Sorting
+
+https://www.coursera.org/learn/data-cleaning/lecture/aqd2Y/subsetting-and-sorting
+
+
+### Quick Review
+```{r}
+set.seed(13435)
+x <- data.frame("var1" = sample(1:5),
+                "var2" = sample(6:10),
+                "var3" = sample(11:15))
+x <- x[sample(1:5),]
+x$var2[c(1, 3)] = NA
+
+x
+```
+
+### Subsetting columns
+```{r}
+x[,1]
+```
+```{r}
+x[,"var2"]
+```
+```{r}
+x[1:2, "var3"]
+```
+### Use logical statements
+```{r}
+x[x$var1 <= 3 & x$var3 > 11,]
+```
+
+```{r}
+x[(x$var1 <= 3 | x$var3 > 14), ]
+```
+
+
+### Sorting
+```{r}
+sort(x$var1)
+```
+```{r}
+sort(x$var1, decreasing = TRUE)
+```
+### sorting with NA's
+```{r}
+sort(x$var2, na.last = TRUE)
+```
+
+### order - 
+```{r}
+x[order(x$var1),]
+```
+
+```{r}
+## tests of na.last
+a <- c(4, 3, 2, NA, 1)
+b <- c(4, NA, 2, 7, 1)
+z <- cbind(a, b)
+(o <- order(a, b)); z[o, ]
+(o <- order(a, b, na.last = FALSE)); z[o, ]
+(o <- order(a, b, na.last = NA)); z[o, ]
+
+```
+
+### Order by multiple vars
+```{r}
+x[order(x$var1, x$var3),]
+```
+
+### Ordering with **library(plyr)**
+```{r}
+library(plyr)
+arrange(x, var1)
+
+```
+
+```{r}
+arrange(x, desc(var1))
+```
+### Adding rows to DF
+```{r}
+x$var4 <- rnorm(5)
+x
+```
+
+### Adding rows and columns to df
+```{r}
+y <- cbind(x, rnorm(5))
+y
+```
+OR
+```{r}
+y <- cbind(rnorm(5), x)
+y
+```
+
+```{r}
+z <- rbind(x, 1:4)
+z
+```
+
+```{r}
+z <- rbind(1:4, x)
+z
+```
+
+For MORE SEE: 
+- www.biostat.jhsph.edu/~ajaffe/lec_winterR/Lecture%202.pdf
+
+
+## Summarizing Data
+
+For example:
+- data.baltimorecity.gov/Community/Restaurants/k5ry-ef3g
+
+```{r}
+library(readr)
+Restaurants <- read_csv("Restaurants.csv", 
+    col_types = cols(`2010 Census Neighborhoods` = col_skip(), 
+        `2010 Census Wards Precincts` = col_skip(), 
+        `Zip Codes` = col_skip()))
+# View(Restaurants)
+```
+
+```{r}
+head(Restaurants)
+```
+
+```{r}
+tail(Restaurants)
+```
+
+```{r}
+summary(Restaurants)
+# NOTE: Min. zipcode is negative. Could be a problem.
+```
+
+```{r}
+str(Restaurants)
+```
+
+### Variability
+```{r}
+quantile(Restaurants$councilDistrict, na.rm = TRUE)
+```
+
+### Making tables
+```{r}
+table(Restaurants$zipCode, useNA = "ifany")
+# UseNA is useful to denote any NA values
+```
+
+### Make 2D tables
+by Council District Vs Zip
+```{r}
+table(Restaurants$councilDistrict, Restaurants$zipCode)
+```
+
+
+### Checking for Missing Values (IMPORTANT)
+
+```{r}
+sum(is.na(Restaurants$councilDistrict))
+```
+```{r}
+any(is.na(Restaurants$zipCode))
+```
+```{r}
+all(Restaurants$zipCode > 0)
+```
+
+```{r}
+colSums(is.na(Restaurants)) # zero na values in every col
+```
+
+```{r}
+all(colSums(is.na(Restaurants)) == 0) # All columns are zero NAs
+```
+
+### Values with Specific Chars
+```{r}
+table(Restaurants$zipCode %in% c("21212")) # Returns all zip that = 21212
+```
+```{r}
+table(Restaurants$zipCode %in% c("21212", "21213")) 
+# Returns all zip that = 21212 OR 21213
+```
+
+### Subsetting with `%in%`
+```{r}
+Restaurants[Restaurants$zipCode %in% c("21212", "21213"),]
+```
+### Cross Tabs for Summarizing Data
+```{r}
+data(UCBAdmissions)
+df = as.data.frame(UCBAdmissions)
+summary(df)
+```
+### Cross Tabs **Important**
+```{r}
+xt <- xtabs(Freq ~ Gender + Admit, data = df)
+xt
+```
+
+### Flat Tables
+```{r}
+warpbreaks$replicate <- rep(1:9, len = 54)
+xt <- xtabs(breaks ~ ., data = warpbreaks)
+xt
+```
+
+### More Flat tables **NICE**
+```{r}
+ftable(xt)
+```
+
+### Find size of dataset
+```{r}
+fakedata = rnorm(1e5)
+object.size(fakedata)
+```
+```{r}
+print(object.size(fakedata), units = "auto", standard = "SI")
+```
+### Creating New Variables
+
+Common vars to create
+- missing vars
+- applying transforms
+- cutting up quantitative vars i.e. factors, bins
+
+```{r}
+# First creating sequences
+s1 <- seq(1,10, by = 0.5)
+s1
+```
+
+```{r}
+s2 <- seq(1,10, length = 5)
+s2
+```
+```{r}
+s3 <- c(1,3,5,7,9)
+seq(along.with = x)
+# take the length from the length of this argument
+# seq(from, to)
+# seq(from, to, by= )
+# seq(from, to, length.out= )
+# seq(along.with= )
+# seq(from)
+# seq(length.out= )
+```
+
+### Subsetting Variables
+```{r}
+Restaurants$NearMe <- Restaurants$neighborhood %in% c("Roland Park", "Homeland")
+table(Restaurants$NearMe)
+```
+
+### Creating Binary Vars
+```{r}
+Restaurants$zipWrong <- ifelse(Restaurants$zipCode < 0, TRUE, FALSE)
+table(Restaurants$zipWrong, Restaurants$zipCode < 0)
+```
+### Making Categorical Vars
+```{r}
+Restaurants$zipGroups <- cut(Restaurants$zipCode, breaks = quantile(Restaurants$zipCode))
+table(Restaurants$zipGroups)
+
+# Quantiles will break up the zipCodes into four groupings,
+# (0-25%], (25-50%], (50-75%], (75-100%]
+```
+### Make tables of these Quants
+```{r}
+table(Restaurants$zipGroups, Restaurants$zipCode)
+```
+
+### Easier Cutting into Quantiles Using **library(Hmsic)**
+
+cut2 {Hmisc} - Cut a Numeric Variable into Intervals
+```{r message=FALSE, warning=FALSE}
+library(Hmisc)
+Restaurants$zipGroups <- cut2(Restaurants$zipCode, g = 4)
+# (g = 4) indicates that it will be cut into quantiles
+table(Restaurants$zipGroups)
+```
+
+### Creating Factor Vars
+```{r}
+Restaurants$zcf <- factor(Restaurants$zipCode)
+Restaurants$zcf[1:10]
+```
+### More Info on Factor Vars
+```{r}
+yesNo <- sample(c("yes","no"), size = 10, replace = TRUE)
+yesNoFact = factor(yesNo, levels = c("yes","no")) # make factors
+relevel(yesNoFact, ref = "yes")
+# Normally the factor takes the lowest value (ie no = zero) as the first but relevel makes the "yes" the first factor.
+```
+
+```{r}
+as.numeric(yesNoFact)
+# See below line 310 for conversion to yes and no. Change that factor into a numeric var again.
+```
+
+### Creating New Vars using **mutate** from **lib(plyr)**
+?Why? It has more steps...
+```{r}
+library(Hmisc)
+library(plyr)
+
+ResData2 <- mutate(Restaurants, zipGroups = cut2(zipCode, g = 4))
+# (g = 4) indicates that it will be cut into quantiles
+table(Restaurants$zipGroups)
+```
+
+Common Transforms may be used too!
+- abs
+- sqrt
+- ceiling
+- floor
+- round
+- signif
+- cos
+- log
+- log2
+- exp
+
+See also **plyr** [tutorial](http://plyr.had.co.nz/09-user/)
+
+
+## Reshaping Data
+
+Your data may not be in tidy data format, i.e. rows = obs, cols = vars
+
+```{r}
+library(reshape2)
+head(mtcars)
+```
+
+### Melting date frames
+```{r}
+mtcars$carname <- rownames(mtcars)
+carMelt <- melt(mtcars, id = c("carname", "gear", "cyl"),
+                measure.vars = c("mpg", "hp"))
+head(carMelt, n=3)
+```
+
+```{r}
+tail(carMelt, n=3)
+```
+
+Once the data is melted, we can recast it into other shapes.
+```{r}
+cylData <- dcast(carMelt, cyl ~ variable)
+cylData
+
+# This dataframe does not show the values of mpg/hp BUT how many measures we have.
+```
+
+```{r}
+cylData <- dcast(carMelt, cyl ~ variable, mean)
+cylData
+
+# This method is more like a summary function
+```
+
+
+### Averaging Values
+```{r}
+head(InsectSprays)
+```
+```{r}
+tapply(InsectSprays$count, InsectSprays$spray, sum)
+
+# Tapply 
+# So, what we have now is different kinds of sprays. So, in this case, the spray is A, or B, or C, or D, or E or F and then it's the count of the number of insects that you see with that different spray, and so one thing that you might want to do is take the sum of the count of insects that you see for each of the different sprays. So to do that what you could do is you could take the insect count variable and pass it to tapply. And you could say, I would like to tapply, that means apply along an index, a particular function.
+
+# So I'm going to apply to count along the index spray, the function sum. What that's gonna do is, within each value of spray, it will sum up the counts, so you get the sum for A and the sum for B and the sum for C
+```
+
+Another way to do the above fucntion is to "Split-Apply-Combine"
+```{r}
+# SPLIT first
+spIns <- split(InsectSprays$count, InsectSprays$spray)
+spIns
+
+# dead bug counts are split into spray types
+```
+Then Apply
+```{r}
+# Apply a sum function
+sprCount <- lapply(spIns, sum)
+sprCount
+```
+
+Now Combine
+```{r}
+unlist(sprCount)
+```
+**OR**
+```{r}
+sapply(spIns, sum)
+```
+
+YAW - Using plyr package
+```{r}
+library(plyr)
+
+ddply(InsectSprays, .(spray), summarise, sum = sum(count))
+```
+
+### Creating a New Var
+```{r}
+detach("package:Hmisc", unload=TRUE)
+# Hmiscm interferes with plyr
+spraySums <- ddply(InsectSprays, 
+                   .(spray), 
+                   summarize, 
+                   sum = ave(count, FUN = sum))
+dim(spraySums)
+```
+
+```{r}
+head(spraySums)
+```
+
+See: R-bloggers for more info on Split-Apply-Combine
+
+See also: `acast`, `arrange`, `mutate`
+
+---
+
+## Practical R Exercises in swirl
+
+- Reading: Practical R Exercises in swirl Part 2
+    - Duration: 10 minutes
+- Practice Programming Assignment: swirl Lesson 1: Manipulating Data with dplyr
+    - Duration: 3 hours
+- Practice Programming Assignment: swirl Lesson 2: Grouping and Chaining with dplyr
+    - Duration: 3 hours
+- Practice Programming Assignment: swirl Lesson 3: Tidying Data with tidyr
+    - Duration: 3 hours
+
+
+
+## swirl Lesson 1: Manipulating Data with dplyr
+
+According to the "Introduction to dplyr" vignette written by the package authors, 
+
+>"The dplyr philosophy is to have small functions that each do one thing well." Specifically, dplyr supplies five 'verbs' that cover most fundamental data manipulation tasks: select(), filter(), arrange(), mutate(), and summarize()
+
+### select {dplyr} - Subsetting columns using their names and types
+
+- `select(cran, ip_id, package, country)`
+- `5:20`
+- `\-(5:20)`
+- `select(cran, r_arch:country) **OR** select(cran, country:r_arch)`
+- `select(cran, -time)`
+- `select(cran, -(X:size))`
+- `filter()`
+- `filter(cran, package == "swirl")`
+
+NOTE:note that filter() recognizes 'package' as a column of cran, without you having to explicitly specify cran$package.
+
+- `filter(cran, r_version == "3.1.1", country == "US")`
+- `?Comparison`
+
+    x < y  
+    x > y  
+    x <= y  
+    x >= y  
+    x == y  
+    x != y  
+  
+- `filter(cran, r_version <= "3.0.2", country == "IN")`
+- `filter(cran, country == "US" | country == "IN")`
+- `filter(cran, size > 100500, r_os == "linux-gnu")` # AND implied
+
+- `is.na(c(3, 5, NA, 10))`  
+[1] FALSE FALSE  TRUE FALSE
+
+- `!is.na(c(3, 5, NA, 10))`  
+[1]  TRUE  TRUE FALSE  TRUE
+
+- `filter(cran, !is.na(r_version))`
+
+- `cran2 <- select(cran, size:ip_id)`
+- `arrange(cran2, ip_id)`
+- `arrange(cran2, desc(ip_id))`
+
+- We can also arrange the data according to the values of multiple variables. For example, arrange(cran2, package, ip_id) will first arrange by package names (ascending alphabetically), then by ip_id. This means that if there are multiple rows with the same value for package, they will be sorted by ip_id (ascending numerically). Try:
+- `arrange(cran2, package, ip_id)`
+- `arrange(cran2, country, desc(r_version), ip_id)`
+- `cran3 <- select(cran, ip_id, package, size)`
+
+- `mutate(cran3, size_mb = size / 2^20)`
+
+- We want to add a column called size_mb that contains the download size in megabytes. Here's the code to do it: mutate(cran3, size_mb = size / 2^20) One very nice feature of mutate() is that you can use the value computed for your second column (size_mb) to create a third column, all in the same line of code. To see this in action, repeat the exact same command as above, except add a third argument creating a column that is named size_gb and equal to size_mb / 2^10.
+- `mutate(cran3, size_mb = size / 2^20, size_gb = size_mb / 2^10)`
+- `mutate(cran3, correct_size = size + 1000)`
+
+- `summarize(cran, avg_bytes = mean(size))`
+
+
+## swirl Lesson 2: Grouping and Chaining with dplyr
+
+### group_by() function & summarise
+```{r eval=FALSE, include=FALSE}
+library(dplyr)
+library(tibble)
+
+cran <- as_tibble(mydf) #?????????????????????????????????
+
+cran
+
+?group_by # Group by one or more variables
+
+by_package <- group_by(cran, package) # Group cran by the package
+
+summarise(by_package, mean(size)) # now returns the mean size for EACH package in our dataset
+```
+
+ Compute four values, in the following order, from
+ the grouped data:
+
+ 1. count = n()
+ 2. unique = n_distinct(ip_id)
+ 3. countries = n_distinct(country)
+ 4. avg_bytes = mean(size)
+
+ A few thing to be careful of:
+
+ 1. Separate arguments by commas
+ 2. Make sure you have a closing parenthesis
+ 3. Check your spelling!
+ 4. Store the result in pack_sum (for 'package summary')
+
+ You should also take a look at ?n and ?n_distinct, so
+ that you really understand what is going on.
+
+pack_sum <- summarize(by_package,
+                      count = n(),
+                      unique = n_distinct(ip_id),
+                      countries = n_distinct(country),
+                      avg_bytes = mean(size))
+
+```{r eval=FALSE, include=FALSE}
+pack_sum <- summarize(by_package,
+                      count = n(),
+                      unique = n_distinct(ip_id),
+                      countries = n_distinct(country),
+                      avg_bytes = mean(size))
+```
+```{r eval=FALSE, include=FALSE}
+pack_sum
+```
+
+### quantile
+
+The 'count' column, created with n(), contains the total number of rows (i.e. downloads) for each package. The 'unique' column, created with n_distinct(ip_id), gives the total number of unique downloads for each package, as measured by the number of distinct ip_id's. The 'countries' column, created with n_distinct(country), provides the number of countries in which each package was downloaded. And finally, the 'avg_bytes' column, created with mean(size), contains the mean download size (in bytes) for each package.
+
+```{r eval=FALSE, include=FALSE}
+quantile(pack_sum$count, probs = 0.99)
+
+quantile(pack_sum$unique, probs = 0.99)
+```
+
+### filter & arrange
+
+We can isolate only those packages which had more than 679 total downloads. Use filter() to select all rows from pack_sum for which 'count' is strictly greater (>) than 679. Store the result in a new object called top_counts.
+
+
+```{r eval=FALSE, include=FALSE}
+top_counts <- filter(pack_sum, count > 679)
+
+top_counts_sorted <- arrange(top_counts, desc(count))
+```
+
+### filter & arrange
+```{r eval=FALSE, include=FALSE}
+top_unique <- filter(pack_sum, unique > 465)
+
+top_unique_sorted <- arrange(top_unique, desc(unique))
+```
+
+
+## swirl Lesson 3: Tidying Data with tidyr
+
+The author of tidyr, Hadley Wickham, discusses his philosophy of tidy data in his 'Tidy Data' paper:
+
+> http://vita.had.co.nz/papers/tidy-data.pdf
+
+This paper should be required reading for anyone who works with data, but it's not required in order to complete this lesson.
+```{r}
+library(tidyr)
+```
+
+Tidy data is formatted in a standard way that facilitates exploration and analysis and works seamlessly with other tidy data tools. Specifically, tidy data satisfies three conditions:
+ 
+1. Each variable forms a column
+1. Each observation forms a row
+1. Each type of observational unit forms a table
+
+
+Any dataset that doesn't satisfy these conditions is considered 'messy' data. Therefore, all of the following are characteristics of messy data, EXCEPT...
+
+1. Multiple variables are stored in one column
+2. A single observational unit is stored in multiple tables
+3. Variables are stored in both rows and columns
+4. Column headers are values, not variable names
+5. CORRECT Every column contains a different variable CORRECT
+6. Multiple types of observational units are stored in the same table
+
+
+### gather() 
+
+NOTE: GATHER is RETIRED
+
+
+
+
+
+
+
+
+

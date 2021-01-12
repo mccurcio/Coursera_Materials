@@ -1,0 +1,599 @@
+---
+title: "EDA - Wk3 - Hierarchical Clustering"
+author: "MCCurcio"
+date: "1/3/2021"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache = TRUE)
+```
+
+# EDA - Wk3
+
+## Hierarchical Clustering (part 1)
+
+[HCA](https://en.wikipedia.org/wiki/Hierarchical_clustering) Good for viz of multi or high-dim data.
+
+Good For: 
+
+- defining closeness  
+- defining groups  
+- viz of groups  
+- interpretation of groups  
+
+General Types  
+
+- Agglomerative: This is a "bottom-up" approach: each observation starts in its own cluster, and pairs of clusters are merged as one moves up the hierarchy.
+    - finds closest things
+    - groups obj.
+    - req. distance measurement of some sort
+        - euclidean dist.
+        - correlation similarity
+        - binary-Manhattan dist.
+        - cos($\theta$)
+    - merges items into groups
+    - produces: tree structure, *dendrogram*
+
+
+- Divisive: **LATER** This is a "top-down" approach: all observations start in one cluster, and splits are performed recursively as one moves down the hierarchy.
+
+
+## Hierarchical Clustering (part 2)
+
+### Example 1
+
+```{r}
+set.seed(1000)
+par(mar=c(0,0,0,0))
+x <- rnorm(12, mean=rep(1:3, each=4), sd=0.2)
+y <- rnorm(12, mean = rep(c(1,2,1), each=4), sd=0.2)
+plot(x, y, pch=19)
+text(x + 0.05, y + 0.05, labels=as.character(1:12))
+```
+
+### Step 1: dist measures
+```{r}
+dataFrame <- data.frame(x=x, y=y)
+dist(dataFrame) # calcs pair wise dist
+# Closest points are 5 & 6, dist=0.08433063
+# Next set of close points is 11 & 12 (dist=0.10471677)...
+```
+
+### Plot Dendrogram
+```{r}
+dist_xy <- dist(dataFrame)
+hClustering <- hclust(dist_xy)
+plot(hClustering)
+```
+
+## Hierarchical Clustering (part 3)
+
+```{r}
+myplclust <- function(hclust, lab=hclust$labels, lab.col=rep(1, length(hclust$labels)), hang=0.1, ...){
+      # This is a mod of the plclust hclust objects *in color*! 
+      # From Eva KF Chan 2009
+      # Arguments: 
+      # hclust=hclustobject, 
+      # lab=a character vector of labels of the leaves of the tree, 
+      # lab.col=color of the labels, 
+      # NA=default device foreground color, 
+      # hang=as in hclust & plculst, 
+      # Side effect=display of the hier' cluster with colored labels.
+      y <- rep(hclust$height, 2)
+      x <- as.numeric(hclust$merge)
+      y <- y[which(x<0)]
+      x <- x[which(x<0)]
+      x <- abs(x)
+      y <- y[order(x)]
+      x <- x[order(x)]
+      plot(hclust, labels=FALSE, hang=hang, ...)
+      text(x=x, 
+           y=y[hclust$order] - (max(hclust$height) * hang), 
+           labels= lab[hclust$order], 
+           col=lab.col[hclust$order], 
+           srt=90, 
+           adj=c(1,0.5), 
+           xpd=NA, ...)
+}
+```
+
+### Dendrogram
+```{r}
+myplclust(hClustering,
+          lab = rep(1:3, each=4),
+          lab.col = rep(1:3, each=4))
+```
+
+See Also: [R-Graph Gallery](https://www.r-graph-gallery.com/)  
+See: [Dendrograms](https://www.r-graph-gallery.com/dendrogram.html)
+
+### How to Merge pts together
+
+Q. What does it mean to be close? [TowardsDataScience.com](https://towardsdatascience.com/introduction-hierarchical-clustering-d3066c6b560e)
+
+- [Average Linkage](https://support.minitab.com/en-us/minitab/18/help-and-how-to/modeling-statistics/multivariate/how-to/cluster-observations/methods-and-formulas/linkage-methods/)   
+    - Like the average of their X-coordinates and the average of their Y-coordinates.   
+    - Similar to "Centroid or Center of Mass"     
+- Complete-Linkage
+    - "Complete-linkage (farthest neighbor) is where distance is measured between the farthest pair of observations in two clusters."   
+
+### Heatmaps()
+
+- Good for tabular data - runs/uses Hier` clustering on the X then the Y vars.
+
+```{r}
+dataFrame = data.frame(x=x, y=y)
+set.seed(1000)
+dataMatrix <- as.matrix(dataFrame)[sample(1:12),]
+heatmap(dataMatrix)
+```
+
+- Provides an idea of relationships between var/obs.    
+- Can be unstable   
+- Sensitive to scaling
+
+## K-means Clustering (Part 1)
+
+See: [K-Means 1](https://www.r-bloggers.com/2020/05/practical-guide-to-k-means-clustering/)
+
+See: [K-Means-Wikipedia](https://en.wikipedia.org/wiki/K-means_clustering)
+
+### Wine Data - kmeans()
+```{r}
+library(rattle.data)
+data(wine, package="rattle.data")
+wine_subset <- scale(wine[ , c(2:4)])
+wine_cluster <- kmeans(wine_subset, 
+                       centers = 3,
+                       iter.max = 10,
+                       nstart = 25)
+
+wine_cluster
+```
+
+## K-Means Clustering (part 2)
+
+### Example 2 - kmeans()
+```{r}
+set.seed(1000)
+par(mar=c(0,0,0,0))
+x <- rnorm(12, mean=rep(1:3, each=4), sd=0.2)
+y <- rnorm(12, mean = rep(c(1,2,1), each=4), sd=0.2)
+plot(x, y, pch=19)
+text(x + 0.05, y + 0.05, labels=as.character(1:12))
+```
+
+```{r}
+dataFrame <- data.frame(x,y)
+kmeans_obj <- kmeans(dataFrame, centers = 3)
+names(kmeans_obj)
+```
+
+
+```{r}
+kmeans_obj$cluster
+```
+
+### Heatmaps & Clusters
+The left-hand side is original while rt-hand side is ordered by rows.
+```{r}
+set.seed(2000)
+dataMatrix <- as.matrix(dataFrame)[sample(1:12),]
+kmeans_obj2 <- kmeans(dataMatrix, centers = 3)
+par(mfrow = c(1,2), mar = c(2,4,0.1,0.1))
+image(t(dataMatrix)[, nrow(dataMatrix):1], yaxt = "n")
+image(t(dataMatrix)[, order(kmeans_obj2$cluster)], yaxt = "n")
+```
+
+
+**NOTE**: It might be helpful to remember that [image](https://www.r-bloggers.com/2016/10/creating-an-image-of-a-matrix-in-r-using-image/) is a *BASE* R fucntion.
+
+See: [Elements of Statistical Learning](https://web.stanford.edu/~hastie/ElemStatLearn/)
+
+
+## Dimension Reduction (part 1)
+
+### Principal Component Analysis & SVD
+
+See: [PCA @ machinelearningplus.com](https://www.machinelearningplus.com/machine-learning/principal-components-analysis-pca-better-explained/)
+
+See: [Dave Tang](https://davetang.org/file/Singular_Value_Decomposition_Tutorial.pdf)
+
+### EXAMPLE 1: Random Data Shows NO PATTERN
+```{r}
+set.seed(3000)
+par(mar = rep(0.2, 4))
+dataMatrix <- matrix(rnorm(400), nrow = 40)
+image(1:10, 1:40, t(dataMatrix)[, nrow(dataMatrix):1])
+```
+
+One could do a Hier` cluster analysis of data
+```{r}
+par(mar = rep(0.2, 4))
+heatmap(dataMatrix)
+```
+
+### Ordered data
+
+```{r, tidy=TRUE, tidy.opts=list(arrow=TRUE, indent=4)}
+set.seed(4000)
+for (i in 1:40){
+  # Use coin flips
+  coinFlip <- rbinom(1, size=1, prob=0.5)
+  if (coinFlip) {
+    dataMatrix[i, ] <- dataMatrix[i, ] + rep(c(0,3), each=5)
+  }
+}
+```
+
+### Plotting Heatmap of dataMatrix
+```{r}
+par(mar = rep(0.2, 4))
+image(1:10, 1:40, t(dataMatrix)[, nrow(dataMatrix):1])
+```
+
+### Hier` Clustering analysis
+```{r}
+par(mar = rep(0.2, 4))
+heatmap(dataMatrix)
+```
+
+### Patterns within Rows & Cols
+```{r}
+hh <- hclust(dist(dataMatrix))
+dataMatrix_Ordered <- dataMatrix[hh$order,]
+par(mfrow = c(1,3))
+#a
+image(t(dataMatrix_Ordered)[, nrow(dataMatrix_Ordered):1])
+#b
+plot(rowMeans(dataMatrix_Ordered), 
+     40:1,
+     xlab = "Row Means",
+     ylab = "Row", 
+     pch = 19)
+#c
+plot(colMeans(dataMatrix_Ordered),
+     xlab = "Column",
+     ylab = "Column Mean", 
+     pch = 19)
+
+```
+
+## Dimension Reduction (part 2)
+
+### PCA Example
+- Components of the SVD; $u$ & $v$
+```{r}
+svd1 <- svd(scale(dataMatrix_Ordered))
+par(mfrow = c(1,3))
+#a
+image(t(dataMatrix_Ordered)[, nrow(dataMatrix_Ordered):1])
+#b
+plot(svd1$u[, 1], 
+     40:1,
+     xlab = "Row",
+     ylab = "First Left Single Vector",
+     pch = 19)
+#c
+plot(svd1$v[, 1],
+     xlab = "Column",
+     ylab = "First Right Single Vector",
+     pch = 19)
+```
+
+### Variance Explained #1
+```{r}
+par(mfrow = c(1,2))
+#a
+plot(svd1$d,
+     xlab = "Column",
+     ylab = "Singular Value",
+     pch = 19)
+#b
+plot(svd1$d^2/sum(svd1$d^2),
+     xlab = "Column",
+     ylab = "Prop. of Var. Explained",
+     pch = 19)
+```
+
+### Relationship of SVD to PCA
+
+```{r}
+svd1 <- svd(scale(dataMatrix_Ordered))
+pca1 <- prcomp(dataMatrix_Ordered, scale. = TRUE)
+plot(pca1$rotation[, 1],
+     svd1$v[,1],
+     xlab = "PC #1",
+     ylab = "Rt. Singular Vector #1",
+     pch = 19)
+abline(c(0,1))
+```
+
+### A Closer Look at SVD Variance Explained
+
+```{r}
+constantMatrix <- dataMatrix_Ordered*0
+for (i in 1:dim(dataMatrix_Ordered)[1]){
+    constantMatrix[i,] <- rep(c(0,1), each=5)
+}
+svd1 <- svd(constantMatrix)
+par(mfrow=c(1,3))
+#a
+image(t(constantMatrix)[, nrow(constantMatrix):1])
+#b
+plot(svd1$d, 
+     xlab = "Column",
+     ylab = "Singular Value",
+     pch = 19)
+#c
+plot(svd1$d^2/sum(svd1$d^2),
+     xlab = "Column",
+     ylab = "Prop. of Var. Explained",
+     pch = 19)
+```
+
+### Adding a Second Pattern to Dataset
+
+```{r}
+set.seed(9999)
+for (i in 1:40) {
+  # coin flip
+  coinFlip1 <- rbinom(1, size = 1, prob = 0.5) # 1D
+  coinFlip2 <- rbinom(1, size = 1, prob = 0.5) # 2D
+   if (coinFlip1) {
+     dataMatrix[i, ] <- dataMatrix[i, ] + rep(c(0,5), each=5)
+   }
+   if (coinFlip2) {
+    dataMatrix[i, ] <- dataMatrix[i, ] + rep(c(0,5), each=5)
+   }
+}
+hh <- hclust(dist(dataMatrix))
+dataMatrix_Ordered <- dataMatrix[hh$order, ]
+```
+
+
+```{r}
+svd2 <- svd(scale(dataMatrix_Ordered))
+par(mfrow=c(1,3))
+#a
+image(t(dataMatrix_Ordered)[, nrow(dataMatrix_Ordered):1])
+#b
+plot(rep(c(0,1), each=5), 
+     xlab = "Column",
+     ylab = "Pattern #1",
+     pch = 19)
+#c
+plot(rep(c(0,1), each=5),
+     xlab = "Column",
+     ylab = "Pattern #2",
+     pch = 19)
+```
+
+### $v$ & Patterns of Variance in Rows
+```{r}
+svd2 <- svd(scale(dataMatrix_Ordered))
+par(mfrow=c(1,3))
+#a
+image(t(dataMatrix_Ordered)[, nrow(dataMatrix_Ordered):1])
+#b
+plot(svd2$v[,1], 
+     xlab = "Column",
+     ylab = "First Rt. Singular Vector",
+     pch = 19)
+#c
+plot(svd2$v[,2], 
+     xlab = "Column",
+     ylab = "Second Rt. Singular Vector",
+     pch = 19)
+```
+
+### Variance Explained #2
+
+```{r}
+svd1 <- svd(scale(dataMatrix_Ordered))
+par(mfrow = c(1,2))
+#a
+plot(svd1$d,
+     xlab = "Column",
+     ylab = "Singular Value",
+     pch = 19)
+#b
+plot(svd1$d^2/sum(svd1$d^2),
+     xlab = "Column",
+     ylab = "Prop. of Var. Explained",
+     pch = 19)
+```
+
+## Dimension Reduction (part 3)
+
+### Missing Values & Imputing Values
+
+Generate Data with NAs (BAD)
+```{r eval=FALSE, include=FALSE}
+dataMatrix2 <- dataMatrix_Ordered
+# Insert NA randomly
+dataMatrix2[sample(1:100, size=40, replace = FALSE)] <- NA
+svd1 <- svd(scale(dataMatrix2))
+```
+
+### Libraries For Imputation:  
+- `imputeMissings`	Impute Missing Values in a Predictive Context   
+- `ClustImpute`	K-means clustering with build-in missing data    imputation, See [R-Bloggers.com](https://www.r-bloggers.com/2019/06/intoducing-clustimpute-a-new-approach-for-k-means-clustering-with-build-in-missing-data-imputation/)   
+- `yaImpute`	Nearest Neighbor Observation Imputation and Evaluation Tools   
+- `imputeR`	A General Multivariate Imputation Framework   
+- `eimpute`	Efficiently Impute Large Scale Incomplete Matrix   
+
+### Imputing Values w/ `imputeMissings` 
+
+Compute the values on a training dataset and impute them on new data.
+This is very convenient in predictive contexts. 
+
+### Example #1 - `imputeMissings` w/ Median/Mode method
+```{r}
+library(imputeMissings)
+
+# Define training data
+train <- data.frame(v_int=as.integer(c(3,3,2,5,1,2,4,6)),
+                    v_num=as.numeric(c(4.1,NA,12.2,11,3.4,1.6,3.3,5.5)),
+                    v_fact=as.factor(c('one','two',NA,'two','two','one','two','two')),
+                    stringsAsFactors = FALSE)
+train
+```
+
+### Compute values on **train** dataset - *Median/mode* method
+```{r}
+values <- compute(train)
+values
+```
+
+### Example #2 - `imputeMissings` Using **randomForest** method
+```{r}
+# Define newdata
+newdata <- data.frame(v_int=as.integer(c(1,1,2,NA)),
+                      v_num=as.numeric(c(1.1,NA,2.2,NA)),
+                      v_fact=as.factor(c('one','one','one',NA)),
+                      stringsAsFactors = FALSE)
+newdata
+```
+
+### Locate the NA's
+```{r}
+is.na(newdata)
+```
+
+### How many missings per variable?
+```{r}
+colSums(is.na(newdata))
+```
+
+### Impute on newdata using randomForest values
+```{r}
+values2 <- compute(train, method = "randomForest")
+impute(newdata, object = values2) # using randomForest values
+```
+
+### Impute on newdata Using Median/Mode values
+```{r}
+impute(newdata, object = values) # using median/mode values
+```
+
+### One can also impute directly in newdata without the compute step
+```{r}
+impute(newdata)
+```
+
+### Flag parameter
+```{r}
+impute(newdata, flag = TRUE)
+```
+
+## Working with Color in R Plots (part 1)
+
+Examples: heat.colors(), topo.colors()
+
+## Working with Color in R Plots (part 2)
+
+- In `grDevices` package for R;   
+    - `colorRamp` - Input is 0,1
+    - `colorRampPalette` - Input colors & returns vector of colors
+    - `colors()` - Returns color names
+```{r}
+library(grDevices)
+
+pal <- colorRamp(c("red", "green"))( (0:4)/4 )
+# (x) , x in [0,1]
+```
+
+```{r}
+pal
+```
+
+### ColorRamp
+```{r}
+library(RColorBrewer)
+
+pal <- colorRamp(c("red", "green"))
+
+pal(seq(0,1, length.out = 10))
+```
+
+### ColorRampPalette
+Returns Hex colors
+```{r}
+pal <- colorRampPalette(c("red", "yellow"))
+
+pal(4) # number indicates output n-length
+```
+## Working with Color in R Plots (part 3)
+
+**RColorBrewer** package
+
+In general, there are **3 palettes**: 
+
+1. Sequential  
+    + Sequential data classes are logically arranged from high to low  
+2. [Diverging](http://personal.psu.edu/cab38/ColorSch/SchHTMLs/CBColorDiv.html)   
+    + Diverging schemes allow the emphasis of a quantitative data display to be progressions outward from a critical midpoint of the data range.   
+3. [Qualitiative](http://personal.psu.edu/cab38/ColorSch/Schemes.html)  
+    + Used for categorical data
+
+**Excellent Examples Palettes**
+
+- [Color Brewer Webpage](https://colorbrewer2.org/#type=qualitative&scheme=Accent&n=3)
+
+### More Examples
+
+```{r}
+library(RColorBrewer)
+
+cols <- brewer.pal(3, "BuGn")
+cols
+```
+
+```{r}
+pal <- colorRampPalette(cols)
+# image(_image_file_, col = pal(20))
+```
+
+### smoothScatter
+Using color with Scatter plots
+```{r}
+set.seed(1500)
+x <- rnorm(5000)
+y <- rnorm(5000)
+smoothScatter(x, y)
+```
+
+
+## Working with Color in R Plots (part 4)
+
+Other useful color plotting funcs:
+
+1. `rgb` to hex color, etc
+2. color transparency - added via **alpha** (0,1) to `rgb`
+3. `colorspace` package used for different color controls
+
+```{r}
+# library(Rgb)?????????????????
+plot(x,y,
+     pch = 19)
+# Q. Does Base R have a good way to change the alpha(transparency) of point characters.
+```
+
+
+
+
+
+
+## Practical R Exercises with swirl
+
+- Practice Programming Assignment: swirl Lesson 1: Hierarchical Clustering
+- Practice Programming Assignment: swirl Lesson 2: K Means Clustering   
+- Practice Programming Assignment: swirl Lesson 3: Dimension Reduction   
+- Practice Programming Assignment: swirl Lesson 4: Clustering Example   

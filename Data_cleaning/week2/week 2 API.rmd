@@ -1,0 +1,65 @@
+---
+title: "APIs"
+author: "MCCurcio"
+date: "12/22/2020"
+output: html_document
+---
+
+# Reading from APIs
+
+API = application programming interfaces
+
+It is common to use APIs w.r.t. Twitter. All one needs is a `GET` request.
+
+1. Create a DEV account with the website.
+
+2. Once logged in, 'Create New Application'
+
+3. Sends one to *OAuth* page to get authentication keys, etc. KEEP this INFO.
+
+```{r}
+library(httr)
+
+myapp = oath_app("twitter", # Your name for app
+                 key = "your_key",
+                 secret = "secret_key")
+sig = sign_oauth1.0(myapp,
+                    token = "token_here",
+                    token_secret = "secret_token")
+homeTL = GET("https://api.twitter.com/1.1/statuses/home_timeline.json", sig)
+```
+
+```{r}
+library(RJSONIO)
+library(jsonlite)
+
+json1 = content(homeTL) # Returns R structured info
+json2 = jsonlite::fromJSON(toJSON1(json1)) # This creates a DF
+json2[1, 1:4] # Example info
+
+# Each row is now a tweet
+```
+
+- `httr` allows `GET`, `POST`, `PUT`, `DELETE`
+
+- `httr` plays well with Facebook, Google, Twitter, GitHub, etc
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

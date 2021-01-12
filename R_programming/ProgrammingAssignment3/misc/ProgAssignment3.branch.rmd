@@ -1,0 +1,123 @@
+title: Coursera-R programming-Assignment-3
+owner: MCurcio
+data: 12/9/2020
+
+##################################################################
+Function: Read ONLY 5 Columns to save memory and speed up program.
+
+```{r}
+read_5_columns <- function(file_name = "outcome-of-care-measures.csv") {
+      # Read only first of .csv
+      df = read.table("outcome-of-care-measures.csv",
+                      nrows = 1, 
+                      header = TRUE,
+                      sep = ",",
+                      stringsAsFactors = FALSE)
+      
+      # place column names into colClasses list
+      colClasses = as.list(apply(df, 2, class)) 
+      
+      # Use ONLY these column names
+      needCols = c("State",
+                   "Hospital.Name",
+                   "Hospital.30.Day.Death..Mortality..Rates.from.Heart.Attack",
+                   "Hospital.30.Day.Death..Mortality..Rates.from.Heart.Failure",
+                   "Hospital.30.Day.Death..Mortality..Rates.from.Pneumonia")
+      
+      # Null out columns that are not needed
+      colClasses[!names(colClasses) %in% needCols] = list(NULL)
+      
+      # Read ONLY the columns in `needCols`
+      df = read.csv("outcome-of-care-measures.csv",
+                    header = TRUE,
+                    na.strings = "Not Available",
+                    stringsAsFactors = FALSE,
+                    colClasses = colClasses)
+      
+      # Change column names for convenience
+      library(tidyverse)
+      df %>% rename(state = State,
+                    hospital = Hospital.Name,
+                    "heart attack" = Hospital.30.Day.Death..Mortality..Rates.from.Heart.Attack,
+                    "heart failure" = Hospital.30.Day.Death..Mortality..Rates.from.Heart.Failure,
+                    pneumonia = Hospital.30.Day.Death..Mortality..Rates.from.Pneumonia)
+      
+      
+}
+```
+
+Test
+```{r message=FALSE, warning=FALSE}
+# df <- read_5_columns()
+# 
+# # Change_cols_345_to_numeric
+#       df$"heart attack" <- as.numeric(df$"heart attack")
+#       df$"heart failure" <- as.numeric(df$"heart failure")
+#       df$pneumonia <- as.numeric(df$pneumonia)
+#       
+# str(df)  
+```
+
+# Rank Best Hospitals in State for 3 Conditions 
+```{r}
+best <- function(State = "AK", outcome = "pneumonia"){
+      
+      # Function loads ONLY 5 columns
+      df <- read_5_columns(file_name = "outcome-of-care-measures.csv")
+      
+      # Change cols 3,4,5 to numeric
+      df$"heart attack" <- as.numeric(df$"heart attack")
+      df$"heart failure" <- as.numeric(df$"heart failure")
+      df$pneumonia <- as.numeric(df$pneumonia)
+      
+      all_states <- unique(df[, 2])
+      outcomes = c("heart attack", "heart failure", "pneumonia")
+        
+      # Check for invalid state & outcome
+      if (!(outcome %in% outcomes)) { 
+            stop("invalid outcome") 
+      } else { 
+          print("outcome OK") 
+          df  <- switch(outcome,
+                        "heart attack"  = (df <- df[, c(1, 2, 3)]),
+                        "heart failure" = (df <- df[, c(1, 2, 4)]),
+                        "pneumonia"     = (df <- df[, c(1, 2, 5)]))
+      }
+      if (!(State %in% all_states)) { 
+            stop("invalid state") 
+      } else { 
+          print("state OK") 
+          df  <-  df[which(df$state == State),]
+      }
+      library(plyr)
+      # Using `plyr::arrange()` to sort the data frame by pneumonia & hospital
+      arrangedData <- arrange(df, pneumonia, hospital)
+}
+
+```
+
+
+```{r}
+df <- best()
+head(df, 1)
+```
+
+
+```{r}
+best(state="AL", outcome = "pneumonia")
+```
+
+```{r}
+best(state="zx", outcome = "pneumonia")
+```
+```{r}
+best(state="AL", outcome = "Neumonia")
+```
+
+
+```{r}
+best(state="Ax", outcome = "Neumonia")
+```
+
+
+

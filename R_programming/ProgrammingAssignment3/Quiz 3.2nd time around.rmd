@@ -1,0 +1,79 @@
+---
+title: "Quiz 3, 2nd time around"
+author: "MCCurcio"
+date: "12/16/2020"
+output: html_document
+---
+
+BEST()
+```{r 1}
+best("SC", "heart attack")
+
+best("NY", "pneumonia")
+
+best("AK", "pneumonia")
+```
+rankhospital
+```{r 2}
+rankhospital("NC", "heart attack", "worst")
+
+rankhospital("WA", "heart attack", 7)
+
+rankhospital("TX", "pneumonia", 10)
+
+rankhospital("NY", "heart attack", 7)
+
+rankhospital("WA", "heart attack", 7)
+
+rankhospital("TX", "pneumonia", 10)
+
+rankhospital("NY", "heart attack", 7)
+
+```
+
+```{r 3}
+rankhospital("NJ", "pneumonia", "best")
+
+
+rankhospital("NY", "pneumonia", "worst")
+
+
+rankhospital("NY", "pneumonia", 5000)
+```
+
+```{r 4}
+rankhospital("MD", "heart failure", 5)
+```
+
+```{r}
+r <- rankall("heart attack", 4)
+as.character(subset(r, state == "HI"))
+```
+
+
+```{r}
+r <- rankall("pneumonia", "worst")
+as.character(subset(r, state == "NJ"))
+```
+
+
+```{r}
+r <- rankall("heart failure", 10)
+as.character(subset(r, state == "NV")$hospital)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

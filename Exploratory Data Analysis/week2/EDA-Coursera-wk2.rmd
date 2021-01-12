@@ -1,0 +1,1057 @@
+---
+title: "EDA-Coursera-wk2"
+author: "MCCurcio"
+date: "12/31/2020"
+output: html_document
+---
+
+# EDA-Coursera-wk2
+
+## Lattice Plotting System (part 1)
+
+[Lattice1](https://www.coursera.org/learn/exploratory-data-analysis/lecture/ICqSb/lattice-plotting-system-part-1)
+
+
+### xyplot, bwplot, levelplot, grid graphics, stripplot, dotplot, splom, contourplot, histograms
+
+Lattice requires one to make the plot "all at once."
+
+
+### Simple xyplot
+
+- `xyplot(y ~ x | f * g, data)`
+
+Example #1
+```{r}
+library(lattice)
+library(datasets)
+
+xyplot(Ozone ~ Wind, data = airquality)
+```
+
+### 5 Panel factor xyplot
+```{r}
+airquality <- transform(airquality, 
+                        Month = factor(Month))
+xyplot(Ozone ~ Wind | Month, 
+       data = airquality, 
+       layout = c(5,1))
+# Plots May to Sept by factor(month)
+```
+
+Lattice Behavior
+- Lattice returns an object of the class **trellis**
+- auto-prints 
+
+### Saving plots to workspace
+```{r}
+p <- xyplot(Ozone ~ Wind, data = airquality) # Nothing prints
+print(p) # Now it prints
+```
+
+## Lattice Plotting System (part 2)
+
+
+
+```{r}
+set.seed(100)
+x <- rnorm(100)
+f <- rep(0:1, each = 50)
+y <- x + f - f * x + rnorm(100, sd = 0.5)
+f <- factor(f, labels = c("Grupo1", "Grupo2"))
+xyplot(y ~ x | f, layout = c(2,1)) # plot 2 cols, 1 row
+```
+
+### Plots w/ median lines
+```{r}
+xyplot(y ~ x | f, panel = function(x,y, ...) {
+    panel.xyplot(x,y, ...) # 1st call the default function for xyplot
+    panel.abline(h = median(y), lty = 2) # Adds horizontal line at median
+})
+```
+
+### Plots w/ regression lines
+```{r}
+xyplot(y ~ x | f, panel = function(x,y, ...) {
+    panel.xyplot(x,y, ...) # 1st call the default function for xyplot
+    panel.lmline(x, y, col = 3) # Adds regression lines
+})
+```
+
+Example:
+See:
+Mouse Allergen & Asthma Cohort Study
+Ahluwalia etal, J. Allergy & Clinic. Immun., 2013
+
+Summary:
+
+- Lattice req. one function call
+- Margins and Spacing are automatics and default values usually work
+- Lattice plots can be good for conditioning plots
+
+## ggplot2 part 1
+
+[part 1](https://www.coursera.org/learn/exploratory-data-analysis/lecture/UlFGr/ggplot2-part-1)
+
+gg = "grammar of graphics" by Leland Wilkinson, written by Hadley W as a graduate stud.
+
+See: http://ggplot2.org for documentation
+
+- the grammar of graphics tells us that we have **mapping** from data to **aesthetic** attributes (color, shape, size) of **geometry** (points, lines, bars) drawn on a coordinate system.
+
+### Basic: qplot()
+
+```{r}
+library(ggplot2)
+head(mpg)
+```
+```{r}
+str(mpg)
+```
+### Simple ggplot2 example
+```{r}
+qplot(x  =displ, y = hwy, data = mpg)
+```
+
+### Modifying Aesthetics
+```{r}
+qplot(x = displ, y = hwy, data = mpg, color = drv)
+```
+
+### Adding a `geom` (Geometry)
+
+```{r}
+qplot(x = displ, y = hwy, data = mpg, geom = c("point", "smooth"))
+```
+
+### Histograms
+```{r}
+qplot(hwy, data = mpg, fill = drv, bins = 40)
+```
+
+### Facets
+```{r}
+qplot(displ, hwy, data = mpg, facets = .~drv)
+```
+```{r}
+qplot(hwy, data = mpg, facets = drv ~., binwidth = 2)
+```
+
+Example from R.Peng
+- Mouse Allergen & Asthma study
+- Baltimore children (5-17)
+- Study indoor enviro and its relationship w asthma morbidity
+- See: http://goo.gl/Wqe9j8
+- Partial data currently available publically
+
+"simulated" [maasc dataset](https://github.com/lupok2001/datasciencecoursera/blob/master/maacs.Rda)
+
+```{r}
+setwd("~/Dropbox/R_exercises/Coursera/Exploratory Data Analysis/week2")
+
+load("maacs.Rda")
+str(maacs)
+```
+```{r}
+qplot(log(eno), data = maacs)
+```
+
+```{r}
+qplot(log(eno), data = maacs, fill = mopos)
+```
+
+### Density Smooth Plots
+```{r message=FALSE, warning=FALSE}
+qplot(log(eno), data = maacs, geom = "density")
+```
+
+### Density Smooth Plots w/ Color
+```{r message=FALSE, warning=FALSE}
+qplot(log(eno), data = maacs, geom = "density", color = mopos)
+```
+
+### Scatter plot1: eNO vs. PM25
+```{r message=FALSE, warning=FALSE}
+qplot(log(pm25), log(eno), data = maacs)
+```
+
+### Scatter plot2: eNO vs. PM25
+```{r message=FALSE, warning=FALSE}
+qplot(log(pm25), log(eno), data = maacs, shape = mopos)
+```
+
+### Scatter plot3: eNO vs. PM25
+```{r}
+qplot(log(pm25), log(eno), data = maacs, color = mopos)
+```
+
+
+### Scatter plots w Smoothing and Linear Modeling
+
+```{r message=FALSE, warning=FALSE}
+qplot(log(pm25), log(eno), data = maacs, color = mopos) +
+      geom_smooth(method = "lm")
+```
+
+### Splitting data with facets
+```{r message=FALSE, warning=FALSE}
+qplot(log(pm25), 
+      log(eno), 
+      data = maacs, 
+      color = mopos,
+      facets = . ~ mopos) +
+      geom_smooth(method = "lm")
+```
+
+**NOTE: For ggplot2; It is difficult to go against the grain or customize(so don't bother) OR learn/use full ggplo2 methods with more complicated methods.**
+
+## ggplot2 (part 3)
+
+Fundamentals only
+- Plots are built up in layers
+- data frame
+- aesthetic mappings: color, size
+- geoms: points, lines and shapes
+- facets: for conditional plots
+- stats: transformations, i.e. binning, quantiles, smoothing
+- scales: factors like m/f
+- coordinate system
+
+### Basic plotting
+```{r message=FALSE, warning=FALSE}
+qplot(log(pm25), 
+      NocturnalSympt, 
+      data = maacs, 
+      facets = .~bmicat, 
+      geom = c("point", "smooth"), 
+      method = "lm")
+```
+
+### Building up layers
+```{r}
+head(maacs[1:3,1:3])
+```
+```{r}
+g <- ggplot(maacs, aes(log(pm25), NocturnalSympt))
+print(g)
+summary(g)
+```
+```{r message=FALSE, warning=FALSE}
+p <- g + geom_point()
+print(p)
+```
+
+**OR**
+
+```{r message=FALSE, warning=FALSE}
+g + geom_point()
+```
+
+## ggplot2 (part 4)
+
+### Adding More Layers: Smoothing
+
+```{r message=FALSE, warning=FALSE}
+g + geom_point() +
+    geom_smooth()
+```
+```{r message=FALSE, warning=FALSE}
+g + geom_point() +
+    geom_smooth(method = "lm")
+```
+
+### Adding Facets - Conditional Vars
+```{r message=FALSE, warning=FALSE}
+g + geom_point() +
+    facet_grid(. ~ bmicat) +
+    geom_smooth(method = "lm")
+```
+
+### Annotations
+- xlab(), ylab, labs, ggtitle
+- each geom function has its own options too
+- For global issues USE: **theme()**
+    - `theme(legend.position = "none")
+- Two std **themes** include
+    - theme_gray()
+    - theme_bw()
+
+### Modifying Aesthetics (colors)
+```{r message=FALSE, warning=FALSE}
+g + geom_point(color = "lightblue", size = 4, alpha = 0.75) +
+    geom_smooth(method = "lm")
+```
+
+```{r message=FALSE, warning=FALSE}
+g + geom_point(aes(color = bmicat), size = 4, alpha = 0.5) +
+    geom_smooth(method = "lm")
+```
+
+### Mod-ing Labels AND Smoothing
+```{r message=FALSE, warning=FALSE}
+g + geom_point(aes(color = bmicat), size = 3, alpha = 0.5) + 
+                   labs(title = "MAACS Study") + 
+                   labs(x = "log PM25",
+                        y = "Nocturnal Symptons") +
+    geom_smooth(method = "lm", se = TRUE)
+```
+
+### Changing Themes
+```{r message=FALSE, warning=FALSE}
+g + geom_point(aes(color = bmicat), size = 4, alpha = 0.5) +
+    theme_bw(base_family = "Times") +
+    geom_smooth(method = "lm")
+```
+
+## ggplot2 (part 5)
+
+### Notes about the Axis Limits
+
+#### Base Plot
+```{r}
+testdata <- data.frame(x = 1:100, y = rnorm(100))
+testdata[50,2] <- 100 # Giant Outlier
+plot(testdata$x, testdata$y, type = "l")
+```
+
+#### GGPlot2
+```{r}
+g <- ggplot(testdata, aes(x=x, y=y)) +
+     geom_line()
+print(g)
+```
+
+### WRONG Way
+This subsets the data to ONLY include data within the limits NOT using the 50,2 datapoint.
+```{r}
+g + ylim(-3, 3)
+```
+
+### Better Way
+This shows point including outlier with lines proceeding outside the chart limits
+```{r}
+g + coord_cartesian(ylim = c(-3, 3))
+```
+
+```{r}
+g <- ggplot(mpg,aes(x=displ,y=hwy,color=factor(year)))
+```
+
+```{r}
+g + geom_point()+facet_grid(drv~cyl, margins = TRUE)
+```
+
+```{r}
+g + geom_point()+facet_grid(drv~cyl, margins = TRUE)+geom_smooth(method="lm", se=FALSE,size=2, color="black")
+```
+
+```{r}
+g + geom_point()+facet_grid(drv~cyl, margins = TRUE)+geom_smooth(method="lm", se=FALSE,size=2, color="black")+labs(x = "Displacement", y= "Highway Mileage", title = "Swirl Rules!")
+```
+
+
+
+### An Other Example by R.Peng
+Cutting N.O. into **RANGES**
+```{r}
+# Calculate the deciles of the data
+cutpoints <- quantile(maacs$logno2_new, seq(0,1, length = 4), na.rm = TRUE)
+
+# Cut the data into deciles
+maacs$no_decile <- cut(maacs$logno2_new, cutpoints)
+
+# See the levels of the newly created factor var
+levels(maacs$no_decile)
+```
+
+```{r message=FALSE, warning=FALSE}
+# Setup ggplot with data frame
+g <- ggplot(maacs, aes(log(pm25), NocturnalSympt))
+
+# Adding Layers
+g + geom_point(alpha = 1/3) +
+    facet_wrap(bmicat ~ no_decile, nrow = 2, ncol = 4) +
+    geom_smooth(method = "lm", se = FALSE, col = 2) +
+    theme_bw(base_family = "Times", base_size = 12) +
+    labs(x = "log PM25") +
+    labs(y = "Nocturnal Symptons") +
+    labs(title = "MAACS Study")
+```
+
+## Practical R Exercises in swirl
+
+### Practical R Exercises in swirl Part 2
+    - Duration: 10 minutes
+1. swirl Lesson 1: Lattice Plotting System
+    - Duration: ~3 hours
+2. swirl Lesson 2: Working with Colors
+    - Duration: ~3 hours
+3. swirl Lesson 3: GGPlot2 Part1
+    - Duration: ~3 hours
+4. swirl Lesson 4: GGPlot2 Part2
+    - Duration: ~3 hours
+5. swirl Lesson 5: GGPlot2 Extras
+    - Duration: ~3 hours
+    
+## EDA Lesson 6: Lattice Plotting System
+
+
+```{r}
+library(lattice)
+library(ggplot2)
+```
+
+Example: `xyplot(y ~ x | f * g, data)`
+
+```{r}
+head(airquality)
+
+xyplot(Ozone ~ Wind, data = airquality)
+```
+
+```{r}
+xyplot(Ozone ~ Wind, data = airquality, col = "red", pch = 8, main = "Big Apple Data")
+```
+
+```{r}
+xyplot(Ozone ~ Wind | as.factor(Month), data = airquality, layout = c(5,1))
+```
+
+
+```{r}
+xyplot(Ozone ~ Wind | Month, data = airquality, layout = c(5,1))
+```
+
+```{r}
+p <- xyplot(Ozone~Wind,data=airquality)
+print(p)
+```
+
+
+```{r}
+names(p) # 45 named properties
+```
+
+
+```{r}
+p[["formula"]]
+```
+
+
+```{r}
+p[["x.limits"]]
+```
+
+```{r}
+table(f)
+```
+
+
+```{r}
+xyplot(y~x|f, layout = c(2,1))
+```
+
+The panel function has 3 arguments, x, y and ... .
+```{r}
+p <- xyplot(y ~ x | f, panel = function(x, y, ...) {
+  panel.xyplot(x, y, ...)  ## First call the default panel function for 'xyplot'
+  panel.abline(h = median(y), lty = 2)  ## Add a horizontal line at the median
+})
+print(p)
+invisible()
+```
+
+Diamonds
+```{r}
+str(diamonds)
+```
+
+```{r}
+table(diamonds$color)
+```
+
+```{r}
+table(diamonds$color, diamonds$cut)
+```
+
+```{r eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+xyplot(price~carat|color*cut,
+       data=diamonds,
+       strip=FALSE,
+       pch=20,
+       xlab=myxlab,
+       ylab=myylab,
+       main=mymain)
+```
+
+### Review
+
+| True or False? Lattice plots are constructed by a series of calls to core functions.
+
+1: True
+2: False
+
+Selection: 2
+
+| Excellent work!
+
+| True or False? Lattice plots are constructed with a single function call to a core lattice function (e.g.
+| xyplot)
+
+1: True
+2: False
+
+Selection: 1
+
+| All that hard work is paying off!
+
+
+| True or False? Aspects like margins and spacing are automatically handled and defaults are usually
+| sufficient.
+
+1: False
+2: True
+
+Selection: 2
+
+| Perseverance, that's the answer.
+
+| True or False? The lattice system is ideal for creating conditioning plots where you examine the same kind
+| of plot under many different conditions.
+
+1: True
+2: False
+
+Selection: 1
+
+| You are amazing!
+
+| True or False? The lattice system, like the base plotting system, returns a trellis plot object.
+
+1: True
+2: False
+
+Selection: 2
+
+| That's a job well done!
+
+| True or False?  Panel functions can NEVER be customized to modify what is plotted in each of the plot
+| panels.
+
+1: False
+2: True
+
+Selection: 1
+
+| You nailed it! Good job!
+
+| True or False?  Lattice plots can display at most 20 panels in a single plot.
+
+1: False
+2: True
+
+Selection: 1
+
+
+## EDA Lesson 2: Working with Colors
+
+[04_ExploratoryAnalysis/Colors](https://github.com/DataScienceSpecialization/courses/)
+
+```{r}
+library(jpeg)
+library(RColorBrewer)
+library(datasets)
+
+colors()
+
+sample(colors(),10)
+
+pal <- colorRamp(c("red","blue"))
+pal(0)
+pal(1)
+
+pal(seq(0,1,len=6))
+```
+
+```{r}
+p1 <- colorRampPalette(c("red","blue"))
+p1(2)
+p1(6)
+
+0xcc
+#hex 33 to decimal, as in 0x33=3*16+3=51
+```
+
+
+```{r}
+p2 <- colorRampPalette(c("red","yellow"))
+p2(2)
+p2(10)
+```
+
+```{r eval=FALSE, include=FALSE}
+showMe(p1(20))
+```
+
+
+```{r}
+p1
+```
+function (n) 
+{
+    x <- ramp(seq.int(0, 1, length.out = n))
+    if (ncol(x) == 4L) 
+        rgb(x[, 1L], x[, 2L], x[, 3L], x[, 4L], maxColorValue = 255)
+    else rgb(x[, 1L], x[, 2L], x[, 3L], maxColorValue = 255)
+}
+<bytecode: 0x559ae13e32d8>
+<environment: 0x559ae17a2fe0>
+
+
+
+rgb {grDevices} -	R Documentation - RGB Color Specification
+```{r}
+?rgb
+```
+
+rgb((0:15)/15, green = 0, blue = 0, names = paste("red", 0:15, sep = "."))
+
+rgb(0, 0:12, 0, max = 255) # integer input
+
+ramp <- colorRamp(c("red", "white"))
+rgb( ramp(seq(0, 1, length = 5)), max = 255)
+
+```{r}
+p3 <- colorRampPalette(c("blue", "green"), alpha = 0.5)
+p3(5)
+```
+
+```{r}
+# Package ‘RColorBrewer’ loaded correctly!
+plot(x, y, pch = 19, col = rgb(0,0.5,0.5))
+```
+
+Alpha = 0.3 (30%)
+```{r}
+plot(x, y, pch = 19, col = rgb(0,0.5,0.5, 0.3))
+
+```
+
+Our last topic for this lesson is the RColorBrewer Package, available on CRAN, that contains interesting and useful color palettes, of which there are **3 types, sequential, divergent, and qualitative**. Which one you would choose to use depends on your data.
+
+
+```{r}
+showMe <- function(cv){
+  myarg <- deparse(substitute(cv))
+  z<- outer( 1:20,1:20, "+")
+  obj<- list( x=1:20,y=1:20,z=z )
+  image(obj, col=cv, main=myarg  )
+}
+```
+
+```{r}
+cols <- brewer.pal(3, "BuGn")
+
+pal <- colorRampPalette(cols)
+
+showMe(pal(20))
+```
+Where:
+showMe <- function(cv){
+  myarg <- deparse(substitute(cv))
+  z<- outer( 1:20,1:20, "+")
+  obj<- list( x=1:20,y=1:20,z=z )
+  image(obj, col=cv, main=myarg  )
+}
+
+```{r}
+image(volcano, col = pal(20))
+```
+
+
+Which of the following is an R package that provides color palettes for sequential,
+| categorical, and diverging data?
+
+1: RColorVintner
+2: RColorBrewer
+3: RColorBluer
+4: RColorStewer
+
+Selection: 2
+
+| Perseverance, that's the answer.
+
+| True or False? The colorRamp and colorRampPalette functions can be used in conjunction with
+| color palettes to connect data to colors.
+
+1: False
+2: True
+
+Selection: 2
+
+| That's correct!
+
+| True or False?  Transparency can NEVER be used to clarify plots with many points
+
+1: True
+2: False
+
+Selection: 2
+
+| You are doing so well!
+
+| True or False?  The call p7 <- colorRamp("red","blue") would work (i.e., not generate an
+| error).
+
+1: False
+2: True
+
+Selection: 2
+
+| One more time. You can do it!
+
+| Recall our reminders to concatenate the colors to form a single argument.
+
+1: False
+2: True
+
+Selection: 1
+
+| That's a job well done!
+
+| True or False?  The function colors returns only 10 colors.
+
+1: False
+2: True
+
+Selection: 1
+
+| You're the best!
+
+| Transparency is determined by which parameter of the rgb function?
+
+1: beta
+2: delta
+3: alpha
+4: it's all Greek to me
+5: gamma
+
+Selection: 3
+
+| That's correct!
+
+
+
+## Lesson 3: GGPlot2 Part1
+
+GGPlot2_Part1. (Slides for this and other Data Science courses may be found at [github](https://github.com/DataScienceSpecialization/courses/)
+
+See: http://ggplot2.org
+
+```{r}
+str(mpg)
+
+qplot(displ, hwy, data=mpg)
+```
+
+
+```{r}
+qplot(displ, hwy, data=mpg) + aes(color = drv)
+
+# OR
+
+qplot(y=hwy, data = mpg, color = drv)
+```
+
+```{r}
+qplot(displ, hwy, data = mpg, color = drv, geom = c("point", "smooth"))
+```
+
+### Box plots with GGplot2
+```{r}
+qplot(drv, hwy, data=mpg, geom="boxplot")
+```
+
+Cool
+```{r}
+qplot(drv,hwy,data=mpg,geom="boxplot",color=manufacturer)
+```
+
+```{r}
+qplot(hwy, data = mpg, fill = drv)
+#`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+```
+
+```{r}
+qplot(displ, hwy, data=mpg,facets = .~drv)
+```
+
+```{r}
+qplot(hwy, data=mpg,facets = drv~., binwidth = 2)
+```
+
+ The facets argument, drv ~ ., resulted in what arrangement of facets?
+
+1: huh?
+2: 2 by 2
+3: 3 by 1
+4: 1 by 3
+
+Selection: 3
+
+| Keep working like that and you'll get there!
+
+| Pretty good, right? Not too difficult either. Let's review what we learned!
+
+...
+
+| Which of the following is a basic workhorse function of ggplot2?
+
+1: xyplot
+2: hist
+3: scatterplot
+4: gplot
+5: qplot
+
+Selection: 5
+
+| Your dedication is inspiring!
+
+| Which types of plot does qplot plot?
+
+1: histograms
+2: scatterplots
+3: all of the others
+4: box and whisker plots
+
+Selection: 3
+
+| Excellent work!
+
+| What does the gg in ggplot2 stand for?
+
+1: grammar of graphics
+2: good grief
+3: goto graphics
+4: good graphics
+
+Selection: 1
+
+| Keep working like that and you'll get there!
+
+| True or False? The geom argument takes a string for a value.
+
+1: False
+2: True
+
+Selection: 2
+
+| You're the best!
+
+| True or False? The data argument takes a string for a value.
+
+1: False
+2: True
+
+Selection: 1
+
+| Keep up the great work!
+
+| True or False? The binwidth argument takes a string for a value.
+
+1: False
+2: True
+
+Selection: 1
+
+| Nice work!
+
+| True or False? The user must specify x- and y-axis labels when using qplot.
+
+1: True
+2: False
+
+Selection: 2
+
+
+### GGPlot2 Part2
+
+
+```{r}
+qplot(displ, hwy, data = mpg, geom=c("point", "smooth"),facets=.~drv)
+```
+
+```{r}
+g <- ggplot(mpg, aes(displ,hwy) ) 
+g
+
+summary(g)
+
+g+geom_point()
+
+(g + geom_point())+geom_smooth()
+```
+
+```{r}
+g+geom_point()+geom_smooth(method="lm")
+```
+
+
+```{r}
+g+geom_point()+geom_smooth(method="lm")+facet_grid(.~drv)
+```
+
+```{r}
+g+geom_point(col="pink",size=4,alpha=1/2)
+```
+
+```{r}
+g+geom_point(size=4,alpha=1/2, aes(color=drv))
+```
+
+
+```{r}
+g+geom_point(aes(color=drv))+labs(title="Swirls Rules!")+labs(x="Displacement", y="Hwy Milage")
+```
+
+```{r}
+g + geom_point(aes(color = drv),size=2,alpha=1/2) +
+    geom_smooth(size=4,linetype=3,method="lm",se=FALSE)
+```
+
+
+```{r}
+g + geom_point(aes(color = drv)) + theme_bw(base_family = "serif" )
+```
+
+
+## GGPlot2 Extras 
+
+GGPlot2_Extras. (Slides for this and other Data Science courses may be found at github https://github.com/DataScienceSpecialization/courses/. If you care to use them, they must be downloaded as a zip file and viewed locally. This lesson corresponds to 04_ExploratoryAnalysis/ggplot2.)
+
+```{r}
+head(diamonds)
+qplot(price, data=diamonds)
+```
+
+```{r}
+qplot(price, data=diamonds, binwidth=18497/30, fill=cut)
+```
+
+
+```{r}
+qplot(price, data=diamonds, geom = "density", color = cut)
+```
+
+```{r}
+qplot(carat, price, data=diamonds)
+```
+
+
+```{r}
+qplot(carat, price, data=diamonds, shape=cut)
+```
+
+
+```{r}
+qplot(carat, price, data=diamonds, color=cut)
+```
+
+
+```{r}
+qplot(carat, price, data=diamonds, color=cut)+ geom_smooth(method = "lm")
+```
+
+
+```{r}
+qplot(carat,price,data=diamonds, color=cut, facets=.~cut) + geom_smooth(method="lm")
+```
+
+---
+
+Which types of plot does qplot plot?
+
+1: scatterplots
+2: all of the others
+3: histograms
+4: box and whisker plots
+
+Selection: 2
+
+Excellent job!
+
+Any and all of the above choices work; qplot is just that good. What does the gg in ggplot2 stand for?
+
+1: good graphics
+2: grammar of graphics
+3: goto graphics
+4: good grief
+
+Selection: 2
+
+Keep up the great work!
+
+True or False? The geom argument takes a string for a value.
+
+1: True
+2: False
+
+Selection: 1
+
+You are amazing!
+
+True or False? The method argument takes a string for a value.
+
+1: True
+2: False
+
+Selection: 1
+
+Keep working like that and you'll get there!
+
+True or False? The binwidth argument takes a string for a value.
+
+1: True
+2: False
+
+Selection: 2
+
+Nice work!
+
+True or False? The user must specify x- and y-axis labels when using qplot.
+
+1: True
+2: False
+
+Selection: 2
+
+That's the answer I was looking for.
+
+
+### Making Quantiles
+
+```{r}
+cutpoints <- quantile(diamonds$carat, seq(0,1, length = 4), na.rm = TRUE)
+
+cutpoints
+
+diamonds$car2 <- cut(diamonds$carat, cutpoints)
+```
+
+```{r}
+g <- ggplot(diamonds, aes(depth, price))
+g + geom_point(alpha=1/3) + facet_grid(cut~car2)
+```
+
+```{r}
+diamonds[myd,]
+
+g + geom_point(alpha=1/3) + facet_grid(cut~car2) + geom_smooth(method="lm", size=1, color="red")
+```
+
+
+```{r}
+ggplot(diamonds, aes(carat, price))+geom_boxplot()+facet_grid(.~cut)
+```
+
+

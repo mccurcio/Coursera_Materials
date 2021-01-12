@@ -1,0 +1,120 @@
+---
+title: "Reading from HDF5"
+author: "MCCurcio"
+date: "12/21/2020"
+output: html_document
+---
+
+# Getting & Cleaning Data - Week 2
+## Reading from HDF5
+
+https://www.coursera.org/learn/data-cleaning/lecture/q7OsM/reading-from-hdf5
+
+### HDF5
+- HDF = hierarchical data format, data in groupings
+- Used for large datasets and meta-data
+- Supports a wide range of data types
+- http://hdfgroup.org
+
+HDF5 is installed via Bioconductor
+
+- With R version 3.5 or greater, install Bioconductor packages using BiocManager; see 
+
+See:
+**https://bioconductor.org/install**
+
+```{r eval=FALSE, include=FALSE}
+source("http://bioconductor.org/biocLite.R")
+biocLite("rhdf5")
+```
+
+Install Bioconductor Packages
+
+To install core packages, type the following in an R command window:
+```{r}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+```
+
+Install specific packages, e.g., “rhdf5”, with
+
+```{r}
+BiocManager::install("rhdf5")
+```
+
+The lecture in the coursera course in modeled on the rhdf5 tutorial, found at: rhjdf5/vignette/pdf
+
+```{r}
+library(rhdf5)
+created = h5createFile("example.h5")
+created
+```
+
+
+### Creating Groups insdie hdf5 file
+```{r}
+created = h5createGroup("example.h5", "foo")
+created = h5createGroup("example.h5", "baa")
+created = h5createGroup("example.h5", "foo/foobaa")
+
+h5ls("example.h5") # Like `ls` command in unix
+```
+### Writing to Groups
+```{r}
+A = matrix(data = 1:10, nrow = 5, ncol = 2)
+h5write(A, "example.h5", "foo/A") 
+# Write A to file example into folder "foo/A"
+
+B = array(seq(0.1, 2.0, by = 0.1), dim=c(5,5,2))
+attr(B, "scale") <- "liter" # We can add attributes like "liter"
+h5write(B, "example.h5", "foo/foobaa/B")
+h5ls("example.h5")
+```
+
+### Writing a Dataset directly
+```{r}
+df = data.frame(1L:5L, seq(0,1, length.out = 5),
+                c("ab", "cde", "fghi", "a", "s"), 
+                stringsAsFactors = FALSE)
+
+h5write(df, "example.h5", "df")
+h5ls("example.h5")
+```
+
+### REading the previously saved data
+```{r}
+readA = h5read("example.h5", "foo/A")
+readB = h5read("example.h5", "foo/foobaa/B")
+read_df = h5read("example.h5", "df")
+
+readA
+```
+
+### Writing & Reading Chunks
+```{r}
+h5write(c(12, 13, 14), "example.h5", "foo/A", index = list(1:3, 1))
+h5read("example.h5", "foo/A")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

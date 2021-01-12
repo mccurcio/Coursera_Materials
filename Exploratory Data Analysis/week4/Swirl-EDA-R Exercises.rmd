@@ -1,0 +1,274 @@
+---
+title: "EDA-Practical R Exercises w swirl"
+author: "MCCurcio"
+date: "1/7/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Swirl-EDA-R Exercises
+
+## Hierarchical_Clustering
+
+[Slides](https://github.com/DataScienceSpecialization/courses/)
+
+### Distance measurements for clustering
+
+#### dist(df, method = "")
+```{r}
+?dist
+
+hc <- hclust(distxy)
+
+plot(hc)
+
+plot(as.dendrogram(hc))
+
+abline(h=1.5, col="blue")
+```
+
+We see that this blue line intersects 3 vertical lines and this tells us that using the distance 1.5 (unspecified units) gives us 3 clusters (1 through 4), (9 through 12), and (5 through 8).
+
+```{r}
+abline(h=.4,col="red") 
+```
+
+Which type of linkage did hclust() use to agglomerate clusters?
+
+1: complete
+2: average
+
+#### Example #2 Heatmaps
+
+```{r}
+heatmap(dataMatrix, col = cm.colors(25))
+
+#mt is mtcars dataframe
+heatmap(mt)
+
+mt
+```
+
+```{r}
+plot(denmt)
+
+dist(denmt)
+```
+
+#### Questions
+
+1. What is the purpose of hierarchical clustering?
+
+- Give an idea of the relationships between variables or observations
+
+True or False? When you're doing hierarchical clustering there are strict rules that you MUST follow.
+
+1: True
+X 2: False
+
+
+2. True or False? There's only one way to measure distance.
+
+X 1: False
+2: True
+
+
+3. True or False? Complete linkage is a method of computing distances between clusters.
+
+X 1: True
+2: False
+
+4. True or False? Average linkage uses the maximum distance between points of two clusters as the distance between those clusters.
+
+1: True
+2: False
+
+
+5. Once you decide basics, such as defining a distance metric and linkage method, hierarchical clustering is deterministic.
+
+1: False
+X 2: True
+
+## K Means Clustering 
+
+K_Means_Clustering. (Slides for this and other Data Science courses may be found at github https://github.com/DataScienceSpecialization/courses/. If you care to use them, they must be downloaded as a zip file and viewed locally. This lesson corresponds to 04_ExploratoryAnalysis/kmeansClustering.)
+
+
+Package ‘ggplot2’ loaded correctly!
+Package ‘fields’ loaded correctly!
+Package ‘jpeg’ loaded correctly!
+Package ‘datasets’ loaded correctly!
+
+
+```{r}
+cmat
+```
+
+```{r}
+mdist(x,y,cx,cy)
+```
+
+Q1. True or False? K-means clustering requires you to specify a number of clusters before you begin.
+
+2 T
+
+
+Q2. K-means clustering requires you to specify a number of iterations before you begin.
+
+True
+X False
+
+
+Q3. Every data set has a single fixed number of clusters.
+
+1: True
+X False
+
+Q4. K-means clustering will always stop in 3 iterations
+
+X False
+2: True
+
+
+Q5. When starting kmeans with random centroids, you'll always end up with the same final clustering.
+
+1: True
+X False
+
+
+
+
+## Swirl/EDA/Dimension Reduction 
+
+Dimension_Reduction. (Slides for this and other Data Science courses may be found at github https://github.com/DataScienceSpecialization/courses/. If you care to use them, they must be downloaded as a zip file and viewed locally. This lesson corresponds to 04_ExploratoryAnalysis/dimensionReduction.)
+
+
+```{r}
+# Source addPatt.R
+set.seed(678910)
+for(i in 1:40){
+  # flip a coin
+  coinFlip <- rbinom(1,size=1,prob=0.5)
+  # if coin is heads add a common pattern to that row
+  if(coinFlip){
+    dataMatrix[i,] <- dataMatrix[i,] + rep(c(0,3),each=5)
+  }
+}
+```
+
+
+For SVD
+
+    X=UDV^t 
+    
+```{r}
+svd(scale(mat))
+```
+
+
+PCA, Principal Component Analysis, "a simple, non-parametric method for extracting relevant information from confusing data sets." We're quoting here from a very nice concise paper on this subject which can be found at http://arxiv.org/pdf/1404.1100.pdf. The paper by Jonathon Shlens of Google Research is called, A Tutorial on Principal Component Analysis.
+
+
+```{r}
+svd1$d
+```
+
+
+a2 <- svd1$u[,1:2] %*% diag(svd1$d[1:2]) %*% t(svd1$v[,1:2])
+
+## Swirl:  EDA/15-CaseStudy  
+
+(Slides for this and other Data Science courses may be found at github https://github.com/DataScienceSpecialization/courses/. If you care to use them, they must be downloaded as a zip file and viewed locally. This lesson corresponds to 04_ExploratoryAnalysis/CaseStudy.)
+
+- In this lesson we'll apply some of the techniques we learned in this course to study air pollution data, specifically particulate matter (we'll call it pm25 sometimes), collected by the U.S. Environmental Protection Agency. This website:
+
+https://www.health.ny.gov/environmental/indoors/air/pmq_a.htm 
+
+from New York State offers some basic information on this topic if you're interested.
+
+```{r}
+dim(pm0)
+head(pm0)
+cnames
+cnames <- strsplit(cnames, '|', fixed = TRUE)
+cnames
+
+?make.names
+names(pm0) <- make.names(cnames[[1]][wcol])
+head(pm0)
+
+x0 <- pm0$Sample.Value
+str(x0)
+mean(is.na(x0))
+
+names(pm1) <- make.names(cnames[[1]][wcol])
+dim(pm1)
+
+x1 <- pm1$Sample.Value
+mean(is.na(x1))
+summary(x0)
+boxplot(x0, x1)
+
+boxplot(log10(x0), log10(x1))
+
+#count negative values
+negative <- x1 < 0
+sum(negative, na.rm = TRUE)
+
+mean(negative, na.rm = TRUE)
+
+dates <- pm1$Date
+
+str(dates)
+
+dates <- as.Date(as.character(dates), "%Y%m%d")
+
+hist(dates[negative], "month")
+
+both <- intersect(site0, site1)
+
+cnt0 <- subset(pm0, State.Code == 36 & county.site %in% both) 
+
+cnt1 <- subset(pm1, State.Code == 36 & county.site %in% both) 
+
+sapply(split(cnt0, cnt0$county.site), nrow)
+
+pm0sub <- subset(cnt0, County.Code==63 & Site.ID==2008)
+
+x1sub <- pm1sub$Sample.Value
+
+dates0 <- as.Date(as.character(pm0sub$Date0), "%y%m%d")
+
+plot(dates0, x0sub, pch=20)
+
+mn0 <- with(pm0, tapply(Sample.Value, State.Code, mean, na.rm = TRUE))
+mn1 <- with(pm1, tapply(Sample.Value, State.Code, mean, na.rm = TRUE))
+
+mrg <- merge(d0, d1, by = "state")
+
+with(mrg, plot(rep(1,52), mrg[,2], xlim = c(0.5,2.5)))
+with(mrg, points(rep(2, 52), mrg[, 3]))
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

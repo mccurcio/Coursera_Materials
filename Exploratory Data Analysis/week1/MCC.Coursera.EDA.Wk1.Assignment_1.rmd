@@ -1,0 +1,44 @@
+---
+title: "Coursera.EDA.Wk1.Assignment_1"
+author: "MCCurcio"
+date: "12/25/2020"
+output: html_document
+---
+
+# Coursera-EDA-Wk1-Assignment 1
+
+This assignment uses data from the [UC Irvine Machine Learning Repository](http://archive.ics.uci.edu/ml/index.php).
+
+We are using the [Individual household electric power consumption Data Set](https://archive.ics.uci.edu/ml/datasets/individual+household+electric+power+consumption)
+
+### The 9 variables in the dataset are taken from the UCI web site:
+
+- Date, Time, Global_active_power, Global_reactive_power, Voltage, Global_intensity, Sub_metering_1, Sub_metering_2, Sub_metering_3
+
+
+## Tasks
+
+1. Was a valid GitHub URL containing a git repository submitted?
+    - `git clone https://github.com/rdpeng/ExData_Plotting1`
+
+2. Does the GitHub repository contain at least one commit beyond the original fork?
+
+3. Please examine the plot files in the GitHub repository. Do the plot files appear to be of the correct graphics file format?
+4. Does each plot appear correct?
+5. Does each set of R code appear to create the reference plot?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

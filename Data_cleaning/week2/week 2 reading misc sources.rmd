@@ -1,0 +1,64 @@
+---
+title: "Reading From Other Sources"
+author: "MCCurcio"
+date: "12/22/2020"
+output: html_document
+---
+
+# Reading From Other Sources
+
+https://www.coursera.org/learn/data-cleaning/lecture/aTxFc/reading-from-other-sources
+
+Examples:
+
+- file - opens a connection to a text file
+- url - opens a webpage
+- gzfile - .gz compressed files
+- bzfile - opens .bz compresseed files
+- **?connections** for more info
+
+Just remember to close open connections
+
+R Packages
+
+- foreign - for sas, etc
+   - example function: read.foo where .foo is file type
+- Database packages
+   - RPostgresSQL
+   - RODBC - SQLite, MySQL, Microsoft Access
+   - RMongo - No-SQL
+   - rmongodb - for Mongodb
+- Reading Image Info
+    - jpeg 
+    - readbitmap
+    - png
+    - EBImage from Bioconductor
+- GIS data
+    - rdgal
+    - rgeos
+    - raster
+- EVEN MP3 data
+    - tuneR
+    - seewave - http://rug.mnhn.fr/seewave
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

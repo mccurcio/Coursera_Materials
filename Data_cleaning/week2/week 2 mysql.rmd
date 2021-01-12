@@ -1,0 +1,95 @@
+---
+title: "week 2 mysql"
+author: "MCCurcio"
+date: "12/21/2020"
+output: html_document
+---
+
+# Getting & Cleaning Data - Week 2
+## Reading from MySQL
+
+https://www.coursera.org/learn/data-cleaning/lecture/njjbw/reading-from-mysql
+
+### For Help:
+
+1. [RMySQL vignette pdf](https://cran.r-project.org/web/packages/RMySQL/RMySQL.pdf)
+2. [List of commands](pantz.org/software/mysql/mysqlcommands.html)
+    - Do not delete, add or join items from ensembl ONLY select.
+    - In general be carful with mysql commands
+3. [R-bloggers](https://www.r-bloggers.com/2011/08/mysql-and-r/) - Good?
+
+### Connecting & listing db
+```{r}
+library(RMySQL)
+ucscDb <- dbConnect (MySQL(), # other DB can be used...
+	                 user = "genome",
+	                 host = "genome-mysql.cse.ucsc.edu")
+	                 
+result <- dbGetQuery(ucscDb, "show databases;") # dbGetQuery is a mysql command
+
+dbDisconnect(ucscDb) # important to disconnect, shoyuld show TRUE
+```
+
+```{r}
+result
+```
+
+### Connecting to hg19 & listing tables
+```{r}
+hg19 <- dbConnect(MySQL(),
+                  user = "genome",
+                  db = "hg19", # human genome 19
+                  host = "genome-mysql.cse.ucsc.edu")
+                  
+allTables <- dbListTables(hg19) # list tables
+length(allTables)
+
+```
+
+```{r}
+allTables[1:5]
+```
+
+```{r}
+dbListFields(hg19, "affyU133Plus2")
+```
+
+```{r}
+dbGetQuery(hg19, "select count(*) from affyU133Plus2")
+# Counts all the records in table `affy`
+```
+
+# Rading from the table
+This gives the records
+```{r}
+affyData <- dbReadTable(hg19, "affyU133Plus2")
+head(affyData)
+```
+
+How to select a specific subset of big data
+```{r message=FALSE, warning=FALSE}
+query <- dbSendQuery(hg19,
+                        "select * from affyU133Plus2 where misMatches between 1 and 3")
+affyMis <- fetch(query)
+quantile(affyMis$misMatches)
+```
+
+```{r}
+affyMisSmall <- fetch(query, n = 10) # Fecth only top 10 records
+dbClearResult(query) # after Send FOR Query one needs to clear the resultant, returning TRUE if it completes.
+```
+
+```{r}
+dim(affyMisSmall)
+```
+
+```{r}
+dbDisconnect(hg19) # important to disconnect DB, should show TRUE
+```
+### See:
+
+1. [RMySQL vignette pdf](https://cran.r-project.org/web/packages/RMySQL/RMySQL.pdf)
+2. [List of commands](pantz.org/software/mysql/mysqlcommands.html)
+    - Do not delete, add or join items from ensembl ONLY select.
+    - In general be carful with mysql commands
+3. [R-bloggers](https://www.r-bloggers.com/2011/08/mysql-and-r/) - Good?

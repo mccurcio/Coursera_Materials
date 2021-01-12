@@ -1,0 +1,127 @@
+---
+title: Coursera-R programming-Assignment-3
+owner: MCurcio
+data: 12/9/2020
+---
+
+The function should check the validity of its arguments. If an invalid outcome value is passed to rankall,
+the function should throw an error via the stop function with the exact message “invalid outcome”. 
+
+IMPORTANT:
+- The `num` variable can take 3 values; “best”, “worst”, or an integer indicating the ranking (smaller numbers are better).
+
+- If the number given by num is larger than the number of hospitals in that state, then the function should
+return NA.
+
+```{r}
+rankall <- function(outcome = "pneumonia", num = 50) {
+      library("tidyverse") # Used for '%>%' & 'arrange'
+      outcome = "heart attack"
+      num = 50
+      # Read .csv
+      df = read.csv("outcome-of-care-measures.csv",
+                    na.strings = "Not Available",
+                    skip = 1,
+                    header = FALSE,
+                    stringsAsFactors = FALSE)
+      
+      # Retain only hospital, state, ha, hf, p
+      df <- df[,c(2,7,11,17,25)]
+      # Collect alphabetized list of states
+      all_states <- sort(unique(df[, 2]))
+      
+      # Check for invalid outcome
+      if (!(outcome %in% c("heart attack", "heart failure", "pneumonia"))) { 
+            stop("invalid outcome") 
+      } else { 
+          #print("outcome OK") 
+          switch(outcome,
+                 "heart attack"  = (df <- df[, c(1, 2, 3)]),
+                 "heart failure" = (df <- df[, c(1, 2, 4)]),
+                 "pneumonia"     = (df <- df[, c(1, 2, 5)]))
+      }
+      # Create an empty data frame with column names
+      ranked_outcomes <- data.frame("hospital" = character(0), "state" = character(0))
+      # Prepare list of hospitals from all states
+      for (state in all_states) {
+             # subset by state 
+             subset_df  <-  df[df[,2] == state,] 
+             # arrange by day-score
+             subset_df <- subset_df %>% arrange(subset_df[,3], subset_df[,1])
+             # Choose best from state
+             subset_df <- subset_df[1, ] 
+             # Save 'best' 1 to df
+             ranked_outcomes <- rbind(ranked_outcomes, subset_df)
+      }
+      # Order ranked_outcomes by score
+      ranked_outcomes <- arrange(ranked_outcomes, ranked_outcomes[,3])
+      # Return hospital names and states
+      df <- ranked_outcomes[, c(1, 2)]
+      
+      # Categorize "best" | "worst" | Int(num) | stop("invalid num")
+      # if (num %in% c("best", "worst")) { 
+      #       switch(num,
+      #              "best"  = (return(df)),
+      #              "worst" = (return(df %>% arrange(desc(row_number())))))
+      # }
+      # if (!(is.integer(num))) {
+      #      stop("invalid number/term")
+      # }
+      # if (num > 0 | num < 51) {
+      #     print("OK")
+      # }
+}
+```
+
+      print("num OK")
+             switch(num,
+                    1:50  = (df <- df[, c(1, 2)]),
+                    "worst" = (df %>% ranked_outcomes(rev)),
+                     = (stop("invalid num term")),
+                    num > 50 = (stop("invalid num term")))
+
+
+```{r}
+df <- rankall(outcome = "pneumonia",  num = 50)
+
+df
+```
+
+
+```{r}
+best("SC", "heart attack")
+
+df
+```
+
+
+```{r}
+df <- rankall(file_name = "outcome-of-care-measures.csv",
+           state = "RI", 
+           outcome = "heart attack")
+
+head(df)
+```
+
+```{r}
+df <- best(file_name = "outcome-of-care-measures.csv",
+           state = "RI", 
+           outcome = "heart battack")
+
+head(df)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

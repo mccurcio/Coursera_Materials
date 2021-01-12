@@ -49,7 +49,6 @@ scc_pm25 <- read_rds("summarySCC_PM25.rds")
 # View(scc_pm25)
 ```
 
-
 ```{r}
 # View data structure
 str(scc_pm25)
@@ -86,15 +85,14 @@ summary(scc_pm25$Emissions, na.rm = FALSE)
 
 - Have total emissions from PM2.5 decreased in the United States from 1999 to 2008? Using the base plotting system, make a plot showing the total PM2.5 emission from all sources for each of the years 1999, 2002, 2005, and 2008.
 
-
 ```{r cache=TRUE}
 # Load 'summarySCC_PM25' data
 library(readr)
 scc_pm25 <- read_rds("summarySCC_PM25.rds")
 ```
 
-Calculate Grand Total Emissions By Year
 ```{r}
+# Calculate Grand Total Emissions By Year
 Year <- c(1999, 2002, 2005, 2008)
 Emissions <- as.integer()
 Yearly_Emissions <- as.integer()
@@ -110,8 +108,8 @@ for (i in 1:4){
 }
 ```
 
-Plot Grand Total Emissions By Year (All Sources)
 ```{r}
+# Plot Grand Total Emissions By Year (All Sources)
 plot_q1 <- function(df){
     plot(x = Yearly_Emissions[,1],
          y = Yearly_Emissions[,2],
@@ -124,18 +122,20 @@ plot_q1 <- function(df){
 
 plot_q1()
 
-#Save .PNG file format
+# Save .PNG file format
+png('mcc_plot_1.png')
+plot_q1()
+dev.off()
 ```
 
 ## Question 2 
 - Have total emissions from PM2.5 decreased in the Baltimore City, Maryland (fips == "24510") from 1999 to 2008? Use the base plotting system to make a plot answering this question.
 
-**Calculate total yearly emissions**
 ```{r}
+# Calculate total yearly emissions
 Year <- c(1999, 2002, 2005, 2008)
 
 Baltimore_Emissions <- as.integer()
-
 Emissions <- as.integer()
 Yearly_Emissions <- as.integer()
 new <- as.integer()
@@ -154,9 +154,9 @@ for (i in 1:4){
 }
 ```
 
-**Plot Baltimore Emissions (All Sources)**
 ```{r}
-plotBaltimore <- function(){
+# Plot Baltimore Emissions (All Sources)
+plot_q2 <- function(){
     plot(x = Baltimore_Emissions[,1], 
     y = Baltimore_Emissions[,2],
     type = "b",
@@ -166,16 +166,19 @@ plotBaltimore <- function(){
     ylim = c(1500, 3500))
 }
 
-plotBaltimore()
+plot_q2()
 
-#Save .PNG file format
+# Save .PNG file format
+png('mcc_plot_2.png')
+plot_q2()
+dev.off()
 ```
 
 
 ## Question 3
 - Of the four types of sources indicated by the type (point, nonpoint, onroad, nonroad) variable, which of these four sources have seen decreases in emissions from 1999–2008 for Baltimore City? Which have seen increases in emissions from 1999–2008? Use the ggplot2 plotting system to make a plot answer this question.
 
-**Calculate Baltimore Pollutant Emissions (four types) for 1999-2008**
+- Calculate Baltimore Pollutant Emissions (four types) for 1999-2008**
 
 - Four emission types are "POINT", "NONPOINT", "ON-ROAD", "NON-ROAD".
 
@@ -186,11 +189,9 @@ Baltimore <- subset(scc_pm25,
                     select = c(Emissions, type, year))
 ```
 
-
-
 ```{r message=FALSE, warning=FALSE}
 # PLOTS USE GGPLOT2, Using facet = Year & Type
-plotBalt_Emiss_Year <- function(df = Baltimore){ 
+plot_q3 <- function(df = Baltimore){ 
     library(lattice)
     library(ggplot2)
     g <- ggplot(df, aes(year,Emissions)) + geom_point() + ylim(0, 400)
@@ -199,12 +200,18 @@ plotBalt_Emiss_Year <- function(df = Baltimore){
     g
     g + geom_smooth(method = "lm") + facet_grid(. ~ type)
 }
-plotBalt_Emiss_Year()
 
+plot_q3()
+
+# Save .PNG file format
+png('mcc_plot_3.png')
+plot_q3()
+dev.off()
 ```
 
 
 ## Question 4
+
 - Across the United States, how have emissions from coal combustion-related sources changed from 1999–2008?
 
 ### NOTE TO GRADER: 
@@ -226,11 +233,12 @@ coal_combustion <- subset(scc_pm25,
 head(coal_combustion)
 ```
 
-**US Coal Combustion [1999-2008]**
+
 ```{r}
-US_coal_emissions <- as.numeric()
+# US Coal Combustion [1999-2008]
+US_coal_emissions <- as.integer()
 Year <- c(1999, 2002, 2005, 2008)
-new <- as.numeric(vector())
+new <- as.integer()
 
 for (i in 1:4){
     Emissions[i] <- sum(subset(coal_combustion,
@@ -242,9 +250,9 @@ for (i in 1:4){
 }
 ```
 
-**Plot Total U.S. Coal Emissions**
 ```{r}
-plot_US_coal <- function(df = US_coal_emissions){
+# Plot Total U.S. Coal Emissions
+plot_q4 <- function(df = US_coal_emissions){
     plot(x = df[,1],
          y = df[,2],
          type = "b",
@@ -253,18 +261,20 @@ plot_US_coal <- function(df = US_coal_emissions){
          ylab = "Total Emissions (tons)")
 }
 
-plot_US_coal()
+plot_q4()
 
-#Save .PNG file format
+# Save .PNG file format
+png('mcc_plot_4.png')
+plot_q4()
+dev.off()
 ```
 
 
 ## Question 5
 - How have emissions from motor vehicle sources changed from 1999–2008 in Baltimore City?
 
-Subset Baltimore & ON-ROAD, [1999-2008]
 ```{r}
-# Subset coal_combustion emissions
+# Subset Baltimore & ON-ROAD, [1999-2008]
 baltimore_onroad_Emissions <- subset(scc_pm25,
                                     (scc_pm25$type == "ON-ROAD" & scc_pm25$fips == "24510"),
                                      select = c(year, Emissions))
@@ -272,11 +282,11 @@ baltimore_onroad_Emissions <- subset(scc_pm25,
 head(baltimore_onroad_Emissions)
 ```
 
-
 ```{r}
-balt_cars_emissions <- as.numeric()
+# Sum Yearly Emissions
+balt_cars_emissions <- as.integer()
 Year <- c(1999, 2002, 2005, 2008)
-new <- as.numeric(vector())
+new <- as.integer()
 
 for (i in 1:4){
     Emissions[i] <- sum(subset(baltimore_onroad_Emissions,
@@ -288,9 +298,9 @@ for (i in 1:4){
 }
 ```
 
-**Plot Total Baltimore & vehicle (type == "ON-ROAD") Emissions, [1999-2008]**
 ```{r}
-plot_balt_veh <- function(df = balt_cars_emissions){
+# Plot Total Baltimore & vehicle (type == "ON-ROAD") Emissions, [1999-2008]
+plot_q5 <- function(df = balt_cars_emissions){
     plot(x = df[,1],
          y = df[,2],
          type = "b",
@@ -299,19 +309,20 @@ plot_balt_veh <- function(df = balt_cars_emissions){
          ylab = "Total Baltimore Vehicle Emissions (tons)")
 }
 
-plot_balt_veh()
+plot_q5()
 
-#Save .PNG file format
+# Save .PNG file format
+png('mcc_plot_5.png')
+plot_q5()
+dev.off()
 ```
-
 
 
 ## Question 6
 - Compare emissions from motor vehicle sources in Baltimore City with emissions from motor vehicle sources in Los Angeles County, California (fips == "06037"). Which city has seen greater changes over time in motor vehicle emissions?
 
-Subset Baltimore & ON-ROAD, [1999-2008]
 ```{r}
-# Subset coal_combustion emissions
+# Subset Baltimore & ON-ROAD, [1999-2008]
 baltimore_onroad_Emissions <- subset(scc_pm25,
                                     (scc_pm25$type == "ON-ROAD" & scc_pm25$fips == "24510"),
                                      select = c(year, Emissions))
@@ -319,21 +330,21 @@ baltimore_onroad_Emissions <- subset(scc_pm25,
 head(baltimore_onroad_Emissions)
 ```
 
-Subset LA & ON-ROAD, [1999-2008]
 ```{r}
-# Subset coal_combustion emissions
+# Subset LA & ON-ROAD, [1999-2008]
 la_onroad_Emissions <- subset(scc_pm25,
-                                    (scc_pm25$type == "ON-ROAD" & scc_pm25$fips == "06037"),
-                                     select = c(year, Emissions))
+                              (scc_pm25$type == "ON-ROAD" & 
+                              scc_pm25$fips == "06037"),
+                              select = c(year, Emissions))
 
 head(la_onroad_Emissions)
 ```
 
-
 ```{r}
-balt_cars_emissions <- as.numeric()
+# Sum Yearly Baltimore/On-Road/Emissions
+balt_cars_emissions <- data.frame()
 Year <- c(1999, 2002, 2005, 2008)
-new <- as.numeric(vector())
+new <- data.frame()
 
 for (i in 1:4){
     Emissions[i] <- sum(subset(baltimore_onroad_Emissions,
@@ -343,10 +354,45 @@ for (i in 1:4){
     balt_cars_emissions <- rbind(balt_cars_emissions, new)
     print(new)
 }
+
+balt_dataframe <- as.data.frame(balt_cars_emissions)
+colnames(balt_dataframe) = c("Year", "Emissions")
+balt_dataframe
+```
+
+```{r}
+# Sum Yearly LA/On-Road/Emissions
+la_cars_emissions <- data.frame()
+Year <- c(1999, 2002, 2005, 2008)
+new <- data.frame()
+
+for (i in 1:4){
+    Emissions[i] <- sum(subset(la_onroad_Emissions,
+                               la_onroad_Emissions$year == Year[i],
+                               select = Emissions))
+    new <- c(Year[i], Emissions[i])
+    la_cars_emissions <- rbind(la_cars_emissions, new)
+    #print(new)
+}
+
+la_dataframe <- as.data.frame(la_cars_emissions)
+colnames(la_dataframe) = c("Year", "Emissions")
+la_dataframe
 ```
 
 
+qplot(x, y, data = A) + geom_point(data = B,colour = 'red') 
+```{r}
+p <- qplot(x = Year, y = Emissions, data = balt_dataframe) 
+p <- p + geom_point(data = la_dataframe, colour = 'red') 
+p <- p + labs(title = "LA vs Baltimore Car Emissions")
+p
 
+# Save .PNG file format
+png('mcc_plot_6.png')
+p
+dev.off()
+```
 
 
 

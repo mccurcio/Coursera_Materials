@@ -1,0 +1,211 @@
+---
+title: "Data Cleaning Course Project"
+author: "MCCurcio"
+date: "1/14/2021"
+output: 
+    html_document:
+        toc: true
+        toc_float: true
+        number_sections: true
+        code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache = TRUE, fig.align="center")
+```
+
+# Data Cleaning Course Project
+
+**Introduction**
+
+The purpose of this project is to demonstrate my ability to collect, work with, and clean a data set. The data is assembled into one large dataframe in order to find the mean and standard deviations of the columns as a check for putting the datasets together properly.
+
+The [Human Activity Recognition Using Smartphones Dataset, Version 1.0](https://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones) is provided in eight(8) files. Six(7) of these files will be bound together to provide one dataframe.
+
+|  #  | File Name             | Dimensions (R x C) |
+| :-: | :-------------------- | :----------------- |
+|  1  | `subject_test.txt`    |           2947 x 1 |
+|  2  | `y_test.txt`          |           2947 x 1 |
+|  3  | `X_test.txt`          |         2947 x 561 |
+|  4  | `subject_train.txt`   |           7352 x 1 |
+|  5  | `y_train.txt`         |           7352 x 1 |
+|  6  | `X_train.txt`         |         7352 x 561 |
+|  7  | `features.txt`        |            561 x 1 |
+|  8  | `activity_labels.txt` |              6 x 2 |
+
+The best way for me to explain the data organization (even to myself) is to use a diagram.
+
+<center>
+![Exploded Diagram of Dataframe](dataframes.png)
+
+</br>
+**Dimensions of Final dataset = [10300 R x 563 C]**
+</center>
+
+## Questions & Initial Data Analysis
+
+### Load `smartphone_dt` data tables
+
+```{r warning=FALSE}
+getwd()
+
+# Load libraries
+my_packages <- c("dplyr", "data.table")
+lapply(my_packages, library, character.only = TRUE)
+```
+
+**List `smartphone_dt` data tables**
+```{r}
+files <- list.files(pattern = "*.txt")
+smartphone_dt <- lapply(files, fread)
+
+class(smartphone_dt)
+files
+```
+
+- Q. Determine for unique numbers in *subject_test.txt* and *subject_train.txt*.
+
+### `subject_train.txt` contains 21 subjects
+
+- 21 subjects were found   
+- `subject_train.txt` contains {1,3,5,6,7,8,11,14,15,16,17,19,21,22,23,25,26,27,28,29,30}  
+
+```{r}
+subject_train <- smartphone_dt[[4]]
+
+unique_train <- as.list(unique(subject_train))
+unique_train
+length_train <- lengths(unique_train)
+length_train
+#dim(subject_train)
+```
+
+### `subject_test.txt` contains 9 subjects
+
+- 9 subjects were found   
+- `subject_test.txt` contains {2,4,9,10,12,13,18,20,24}    
+
+```{r}
+subject_test <- smartphone_dt[[3]]
+
+unique_test <- as.list(unique(subject_test))
+unique_test
+length_test <- lengths(unique_test)
+length_test
+#dim(subject_test)
+```
+
+### `activity_labels.txt` contains 6 labels   
+
+- [1, WALKING],   
+- [2, WALKING_UPSTAIRS],     
+- [3, WALKING_DOWNSTAIRS],   
+- [4, SITTING],   
+- [5, STANDING],   
+- [6, LAYING]  
+
+```{r}
+activities <- smartphone_dt[[1]]
+
+unique_activities <- as.list(unique(activities))
+unique_activities
+#dim(activities)
+```
+
+### Merge Seven (7) datasets  
+
+- Step 1: Merge `subject_train.txt` & `y_train.txt` & `X_train.txt` to produce `train_dt`.  
+- Step 2: Merge `subject_test.txt`  & `y_test.txt`  & `X_test.txt`  to produce `test_dt`.  
+- Step 3: Merge `train_dt` & `test_dt` & `subject_test.txt` to produce `t_t_dt`.  
+
+[1] "activity_labels.txt" "features.txt"        "subject_test.txt"    "subject_train.txt"  
+[5] "X_test.txt"          "X_train.txt"         "y_test.txt"          "y_train.txt"
+
+```{r}
+train_dt <- cbind(smartphone_dt[[4]], smartphone_dt[[8]], smartphone_dt[[6]])
+test_dt  <- cbind(smartphone_dt[[3]], smartphone_dt[[7]], smartphone_dt[[5]])
+
+t_t_dt <- rbind(train_dt, test_dt)
+```
+
+- Step 4: Merge "subject_num", "y_labels" & features.txt to produce `all_col_names`.  
+- Step 5: Assign column names, `all_col_names` to t_t_dt, (train-test data tables)
+```{r}
+all_col_names <- c("SubjectNumber", "YLabels", smartphone_dt[[2]][[2]])
+
+colnames(t_t_dt) <- all_col_names
+
+t_t_dt[1:3, 1:5]
+
+write.table(t_t_dt, file = "merged_dataset.csv", row.names = FALSE)
+```
+
+- Step 6: Create `Tidy_Data_Set.txt` with the average of each variable for each activity(YLabels) and each Subject Number(SubjectNumber).
+
+```{r}
+##Part 5 - From the data set in step 4, creates a second, independent tidy data set with the average of each variable for each activity and each subject
+
+t_t_dt$SubjectNumber <- as.factor(t_t_dt$SubjectNumber)
+t_t_dt <- data.table(t_t_dt)
+
+mean_values <- aggregate(. ~ SubjectNumber + YLabels, t_t_dt, mean)
+mean_values <- mean_values[order(mean_values$SubjectNumber, mean_values$YLabels), ]
+write.table(mean_values, file = "mean_values.csv", row.names = FALSE)
+```
+
+## Appendix
+
+### Assignment
+
+You are required to submit: 
+
+1. a tidy data set
+
+2. The GitHub repository with the course project is at: https://github.com/mccurcio/data_cleaning_project
+
+3. Generate `CodeBook.md` that describes **variables, data, any transformations or work** that you performed to clean up the data.
+
+4. Generate `README.md`   
+
+5. This repo explains how all of the scripts work and how they are connected.
+    - Produce list of steps used to re-create data.
+
+### Review criteria:
+
+The submitted material will be reviewed on 5 criteria:
+
+1. Your submitted data set is tidy.
+
+1. Your Github repo contains the required scripts.
+
+1. GitHub contains a code book that modifies and updates the available codebooks with the data to indicate all the variables and summaries calculated, along with units, and any other relevant information.
+
+1. A README that explains the analysis files is clear and understandable.
+
+1. The work submitted for this project is the work of the student who submitted it.
+
+
+### Getting and Cleaning Data Course Project
+
+The purpose of this project is to demonstrate your ability to collect, work with, and clean a data set. The goal is to prepare tidy data that can be used for later analysis. You will be graded by your peers on a series of yes/no questions related to the project. 
+**Here are the data for the project:**
+
+- https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip
+
+1. Create `run_analysis.R`
+    
+1. Create `merged_dataset.csv`, merging the training and test sets.
+    
+2. Extracts only the **measurements on the mean and standard deviation** for each measurement. 
+    - Create table of feature means and stdevs
+
+3. Uses **descriptive activity names** to name the activities in the data set.
+
+4. Appropriately **labels the data set with descriptive variable names.** 
+
+5. From the data set in step 4, creates a second, independent tidy data set with the average of each variable for each activity and each subject.
+    - Create tidy dataset for activity (1-6)
+    - Create tidy dataset for each subject (#?)
+
+
+EOF

@@ -1,0 +1,361 @@
+---
+title: "Data Cleaning - Week 4"
+author: "MCCurcio"
+date: "1/14/2021"
+output: html_document
+---
+
+# Getting and Cleaning Data - Week 4
+
+## Editing Text Variables
+
+We will use Baltimore Camera Data:
+https://data.baltimorecity.gov/Transportation/Baltimore-Fixed-Speed-Cameras/dz54-2aru
+
+```{r}
+fixed_speed_cameras <- read.csv("~/Dropbox/R_exercises/Coursera_Materials/Data_cleaning/week4/Fixed_Speed_Cameras.csv", stringsAsFactors=FALSE)
+#View(Fixed_Speed_Cameras)
+
+names(fixed_speed_cameras)
+```
+
+### tolower
+
+```{r}
+tolower(names(fixed_speed_cameras))
+```
+
+### strsplit()
+Good for data separated by periods ,etc.
+```{r}
+splitNames <- strsplit(names(fixed_speed_cameras), "\\.")
+splitNames
+```
+
+### Quick Aside on "Lists"
+```{r}
+myList <- list(letters = c("A","B","C"), numbers=1:3, matrix=matrix(1:25, ncol =5))
+myList
+```
+
+```{r}
+myList[1]
+```
+
+OR
+```{r}
+myList$numbers
+```
+
+OR
+```{r}
+myList[[3]]
+```
+
+### Rectifying strsplit()
+Since strsplit() returns a list then I can use list calls.
+
+If I had a name like "location.23" then I could strsplit the word and the number and take only the word (for example).
+```{r}
+columnName = "location.23"
+
+splitNames <- strsplit(columnName, "\\.")
+splitNames
+```
+
+Making a function to take the columnName(s) and use only the first word would be:
+```{r}
+takeFirstWord <- function(x){x[1]}
+
+sapply(splitNames, takeFirstWord)
+```
+
+```{r}
+head(fixed_speed_cameras, 3)
+```
+
+
+### Sub
+substituting characters for different words in my data
+```{r}
+tolower(names(fixed_speed_cameras))
+```
+
+ALSO: Sub is good at substituting "_" to to ""...
+```{r}
+sub("X", "xDegrees", names(fixed_speed_cameras))
+```
+
+### gsub
+`gsub` is used for sub-ing multiple instances of a character string...
+```{r}
+testString <- "we want many spaces then turn them into underscores"
+gsub(" ", "_", testString)
+```
+
+### grep() & grepl()
+searching for specific names and strings
+```{r}
+grep("AVE", fixed_speed_cameras$address)
+# Grep returns a vector of numbers for the locations of the sought phrase.
+```
+
+```{r}
+table(grepl("AVE", fixed_speed_cameras$address))
+# Grepl - grep logical, returns a logical vector of (T,F) for each line that has or does not have the sought phrase.
+```
+
+### Subsetting with `grep`
+For example, I DO NOT want west bound cameras.
+```{r}
+not_west_bound <- fixed_speed_cameras[!grepl("W/B", fixed_speed_cameras$direction), ]
+head(not_west_bound)
+```
+
+### Grep with "value=TRUE"
+
+```{r}
+grep("Ave", fixed_speed_cameras$street, value = TRUE)
+```
+
+### Using grep to find the Absence of field/string
+```{r}
+grep("Matt", fixed_speed_cameras$address)
+```
+
+### grep for counting
+```{r}
+length(grep("Ave", fixed_speed_cameras$street, value = TRUE))
+```
+
+### More string function in library(stringr)
+```{r}
+library(stringr)
+nchar(fixed_speed_cameras[1,4])
+```
+
+### Substr
+```{r}
+substr(fixed_speed_cameras[1,4], 1,5) 
+# 1st var: where to look,
+# 2nd var: Start pt
+# 3rd var: stop pt
+```
+
+### Paste
+```{r}
+paste("Matthew", "Curcio", sep = " ")
+```
+
+### Paste0
+pastes strings together with NO characters separating them
+```{r}
+paste0("Matthew", "Curcio")
+```
+
+### Str_trim
+- `str_trim()` removes whitespace from start and end of string
+- str_trim(string, side = c("both", "left", "right"))
+```{r}
+str_trim("Mat       ")
+```
+
+### Str_squish
+- `str_squish()` also reduces repeated whitespace inside a string
+```{r}
+str_squish("Matt      Curcio")
+```
+
+```{r}
+str_squish("  String with trailing,  middle, and leading white space\t")
+```
+
+```{r}
+str_squish("\n\nString with excess,  trailing and leading white   space\n\n")
+#[1] "String with excess, trailing and leading white space"
+```
+
+### Rules
+
+- Whenever possible convert to all lower case.
+- Strings should be descriptive
+    - Use "Diagnosis" rather than "Dx"
+- Reduce duplication
+- Not to have underscores or dots or white spaces in strings.
+- Usaually are made into **Factors**
+
+
+## Regular Expressions I
+
+- Regex have **literal** and **meta** characters for use.
+- Regex comes the need to search or express:
+    - White space boundaries
+    - Sets of literals
+    - Beginning or end of line
+    - Alternatives, TRUE or FALSE, is or is not
+
+
+### Beginning of lines
+- `^` for example, `^"My name"`, finds this phrase ONLY at beginning of lines.
+
+### End of Line
+- `$`, for example, `$"last words"` finds at end of line ONLY
+
+### Sets or Lists of character to accept
+- `[ ]`, for example, `[Bb] [Uu] [Ss] [Hh]` will find ANY combo of **bush** with any combo of caps or not.
+
+### Combinations of searches
+
+- `^[Ii] am` will only find "I am" or "i am" at the beginning of the line.
+- `^[0-9]` : finds only numbers at the beginning of the line.
+- `[a-zA-Z]$` : looks for any letter (caps or lower) at END of line.
+
+- BUT caret(`^`) can also mean NOT.
+    - `[^?.]$` will find "..." or "!" or blank space at end of line...
+
+## Regular Expressions II
+
+More metacharacters
+
+- `"."` indicates 'all', `9.11` matches 9-11, or 9/11 or 9:11...
+- `|` indicates OR `^Flood|Fire` matches those two words at the beginning of a line. Two "alternatives".
+    - `good|bad|ugly`
+    - `(!|?|.|,)$`
+    - George( [Ww]\.)? Bush matches `George W. Bush` or `George Bush`
+- `*` star indicates "repeat ANY number of times"
+- `+` plus indicates "repeats One or more times"
+    - `(.*)` matches (hello) or (), ...
+    - `[0-9]+ (.*)names` matches any number before the word names.
+- `{}` match a range like `^{1,5}[0-9]` matches one to five numbers together at beginning.
+- `m,n` matches at least m but not more than n mathces
+- `m` matches exactly `^m999` must have **999** at beginning not 99 or 9999.
+- `m,` matches 'at least m number of matches.
+- ` +([aA-Z]+) +\1+ 1` matches "blah blah" or "and and", ...
+- the `*` is greedy such that it matches the longest possible phrase.
+    - `^s(.*)s` matches "sitting with my sister at starbucks"
+    - For LESS greedy lengths to match add `?`
+    - `^[sS](.*?)s$` looks for small length such as "sitting with my sister at starbucks" returns **"sitting with my s"**
+
+## Working with Dates
+
+```{r}
+d1 = date()
+d1
+```
+```{r}
+class(d1)
+```
+
+### Using `Sys.Date()`
+
+```{r}
+d2 = Sys.Date()
+d2
+```
+
+```{r}
+class(d2)
+```
+
+### formatting dates
+```{r}
+format(d2, "%a %b %d")
+```
+
+SEE: **man date**
+
+### taking and formatting into date
+```{r}
+x = c("1Jan1960", "14Mar1975")
+z = as.Date(x, "%d%b%Y")
+z
+```
+
+### Time differences
+```{r}
+z[2] - z[1]
+```
+
+```{r}
+as.numeric(z[2] - z[1])
+```
+
+### Converting to Julian
+```{r}
+weekdays(z[1])
+```
+
+```{r}
+months(z[1])
+```
+
+### From "1960-01-01"
+```{r}
+julian(z[1])
+```
+
+### Lubridate
+```{r}
+library(lubridate)
+
+?Sys.Date
+?Sys.timezone
+
+# Convert a number ot a date
+ymd("19640829") # or any combo of 'ymd' for reformatting
+
+ymd_hms("2015081410:20:25")
+
+# Setting time zones
+ymd_hms("20150814 10:20:25", tz="EST")
+```
+
+NOTE: Base R is slightly different
+```{r}
+x = dmy(c("1Jan1960", "14Mar1975"))
+wday(x[1])
+```
+
+See:
+- [Lubridate](https://lubridate.tidyverse.org/)
+- It is best to use "POSIXct" or "POSIXlt"
+https://www.rdocumentation.org/packages/tis/versions/1.38/topics/POSIXct
+
+
+## Data Resources
+
+Free data is everywhere!
+
+- United Nations - data.un.org
+- US - data.gov
+- UK - data.gov.uk
+- France - www.data.gouv.fr
+- MORE - www.data.gov/opendatasites
+
+- Gapminder is cool! - gapminder.org
+- Survey data - asdfree.com
+- Infochimps Marketplace
+- Kaggle
+- UCI
+- Kdnuggets
+- Arvix data
+- Public data on Amazon Web Services
+- CMU Stalib
+- Stanford Large Network data
+
+See also: Hilary Mason, Peter Skomoroch, Jeff Hammerbacher, Gregory Piatetshy-shapiro,... 
+
+#### APIs include
+ 
+- twitter, PLoS, rOpenSci, Google maps, figshare
+
+
+
+
+
+
+
+
+
+
+

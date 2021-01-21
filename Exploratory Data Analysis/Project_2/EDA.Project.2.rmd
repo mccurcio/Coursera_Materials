@@ -385,7 +385,7 @@ qplot(x, y, data = A) + geom_point(data = B,colour = 'red')
 ```{r}
 p <- qplot(x = Year, y = Emissions, data = balt_dataframe) 
 p <- p + geom_point(data = la_dataframe, colour = 'red') 
-p <- p + labs(title = "LA vs Baltimore Car Emissions")
+p <- p + labs(title = "LA vs Baltimore Car Emissions, RED = LA, BLACK = Baltimore")
 p
 
 # Save .PNG file format

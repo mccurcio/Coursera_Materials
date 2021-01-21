@@ -130,10 +130,7 @@ For example:
 
 ```{r}
 library(readr)
-Restaurants <- read_csv("Restaurants.csv", 
-    col_types = cols(`2010 Census Neighborhoods` = col_skip(), 
-        `2010 Census Wards Precincts` = col_skip(), 
-        `Zip Codes` = col_skip()))
+Restaurants <- read_csv("Restaurants.csv")
 # View(Restaurants)
 ```
 
@@ -394,7 +391,7 @@ tapply(InsectSprays$count, InsectSprays$spray, sum)
 # So I'm going to apply to count along the index spray, the function sum. What that's gonna do is, within each value of spray, it will sum up the counts, so you get the sum for A and the sum for B and the sum for C
 ```
 
-Another way to do the above fucntion is to "Split-Apply-Combine"
+Another way to do the above function is to "Split-Apply-Combine"
 ```{r}
 # SPLIT first
 spIns <- split(InsectSprays$count, InsectSprays$spray)
@@ -631,6 +628,298 @@ Any dataset that doesn't satisfy these conditions is considered 'messy' data. Th
 ### gather() 
 
 NOTE: GATHER is RETIRED
+
+
+## Managing Data Frames with dplyr - Introduction
+
+- https://www.coursera.org/learn/data-cleaning/lecture/sXF4A/managing-data-frames-with-dplyr-introduction
+
+### *Verbs*: Arrange, Filter, Select, Mutate, Rename
+
+Dplyr likes to work with **tidy data**, therefore each row is an observation and each column is a variable.
+
+1. select - returns a *subset*
+
+2. filter - extract subset of rows based on logic
+
+3. rename - rename variables in a df
+
+4. mutate - add **new** variables/columns OR transform vars
+
+5. summarise - generate 5/6 number stats
+
+6. print
+
+---
+
+### Dplyr Properties
+
+1. First argument is a dataframe
+
+2. 2nd, 3rd arguments help describe the operation(s) to carry out
+
+3. result is a **NEW** dataframe
+
+4. Dataframes must be properly formatted and annotated
+
+
+## Managing Data Frames with dplyr - Basic Tools
+
+1. Load Dplyr or Tidyverse package(s)
+
+```{r}
+library(dplyr)
+```
+
+Example(s)
+```{r}
+data(mtcars)
+
+# Inspect var names
+names(mtcars)
+```
+
+### Select
+```{r}
+head(select(mtcars, mpg:disp)) # shows between mpg and disp
+```
+
+
+```{r}
+head(select(mtcars, -(mpg:disp))) # shows EXCEPT mpg and disp
+```
+
+
+### filter
+```{r}
+mtcars.filtered <- filter(mtcars, mpg > 30)
+head(mtcars.filtered)
+```
+
+multiple logical statements
+```{r}
+mtcars.filtered <- filter(mtcars, mpg > 30 & disp < 90)
+head(mtcars.filtered)
+```
+
+### Arrange
+reorder rows based on values, example order by mpg
+```{r}
+small_cars <- arrange(mtcars.filtered, mpg) # OR *desc*end for reverse order
+small_cars
+```
+
+### Rename vars
+```{r}
+small_cars <- rename(small_cars, cylinders = cyl)
+small_cars
+```
+
+### Mutate - transform vars
+
+Good for centering or changing row values
+```{r}
+small_cars <- mutate(small_cars, centered_mpg = mpg - mean(mpg, na.rm = TRUE))
+small_cars
+```
+
+### Group by function
+allows one to split by some categorical vars
+```{r}
+mtcars <- mutate(mtcars, 
+                 temp_var = factor(1 * (hp < 150), 
+                                   labels = c("sport", "regular")))
+sporty_cars <- group_by(mtcars, temp_var)
+
+head(select(mtcars, hp:temp_var))
+```
+
+### Summarise - can give one ONLY the stats you want
+```{r}
+summarise(mtcars, Mn_miles = mean(mpg), 
+                  Mn_hp = mean(hp), 
+                  Md_wt = median(wt))
+```
+
+### Summarize mtcars by cylindar
+```{r}
+number_cylinders <- group_by(mtcars, cyl)
+summarise(number_cylinders, Mn_mpg = mean(mpg, na.rm = TRUE), cyl)
+```
+
+### Pipes (%>%) 
+summarise centered_mpg by cylinder ?????
+```{r}
+mtcars %>% mutate(centered_mpg = mpg - mean(mpg, na.rm = TRUE)) %>% summarise(centered_mpg, cyl)
+```
+
+```{r}
+mtcars %>% mutate(centered_mpg = mpg - mean(mpg, na.rm = TRUE)) %>% group_by(cyl) %>% summarise(mean_centered_mpg = mean(centered_mpg))
+```
+
+```{r}
+with(mtcars, aggregate(list(centered_mpg=scale(mpg, scale=TRUE)), list(cyl=cyl), mean))
+```
+
+
+- **dplyr** can be used with `data.table` and SQL interfaces via DBI package.
+
+### Merging Data
+
+To merge different data sets you must have a common primary key.
+
+See: [Data Science](https://www.datasciencemadesimple.com/join-in-r-merge-in-r)
+
+For example:
+
+**db1**:
+Employee_Name
+Employee_Address
+Employee_Designation
+*Employee_Id_A = primary key*
+Employee_PhoneNumber
+Employee_PanNumber
+
+db2:
+Employee_Salary
+Employee_Title
+Employee_PayRating
+*Employee_Id_B = primary key*
+Employee_PhoneNumber
+Employee_PanNumber
+
+
+```{r}
+?merge
+```
+
+For example:
+```
+merge(x, y, 
+      by = intersect(names(x), names(y)),
+      by.x = by, by.y = by, all = FALSE, all.x = all, all.y = all,
+      sort = TRUE, suffixes = c(".x",".y"), no.dups = TRUE,
+      incomparables = NULL, ...)
+```
+
+*(x = db1, y = db2)* are the database names
+*all = TRUE*: means, if there's a value that appears in one (db1) but not in the other (db2), it should include another row/column. But with na values for the missing values that are, don't appear in the other data frame
+
+Example:
+```
+merged_data <- merge(db1, db2, 
+                     by.x = "Employee_Id_A", by.y = "Employee_Id_B",
+                     all = TRUE)
+```                     
+                     
+COOL example
+```{r}
+# Create origin dataframe(
+
+producers_db <- data.frame(   
+    surname = c("Spielberg","Scorsese","Hitchcock","Tarantino","Polanski"),    
+    nationality = c("US","US","UK","US","Poland"),    
+    stringsAsFactors = FALSE)
+
+# Create destination dataframe
+movies_db <- data.frame(    
+    surname = c("Spielberg","Scorsese","Hitchcock","Hitchcock","Spielberg","Tarantino","Polanski"),    
+    title = c("Super 8","Taxi Driver","Psycho","North by Northwest","Catch Me If You Can","Reservoir Dogs","Chinatown"),
+    stringsAsFactors=FALSE)
+```
+
+
+```{r}
+# Merge two datasets
+m1 <- merge(producers_db, movies_db, by.x = "surname")
+m1
+dim(m1)
+```
+
+#### Default is to merge on ALL column.
+Smash all column names and data into one new database
+
+### Intersect 
+
+- Gives the intersected data, merges on the variables with the exact same names.
+
+### Join in the dplyr package
+
+```{r}
+library(dplyr)
+
+df1 <- data.frame(id=sample(1:10), x=rnorm(10))
+df2 <- data.frame(id=sample(1:10), y=rnorm(10))
+
+arrange(inner_join(df1, df2), id)
+```
+
+### GOOD JOIN REFERENCES
+
+- See [Wikipedia SQL Joins](https://en.wikipedia.org/wiki/Join_(SQL))
+- https://stat545.com/join-cheatsheet.html
+- https://www.rdocumentation.org/packages/dplyr/versions/0.7.6/topics/join
+- https://rpubs.com/williamsurles/293454
+
+- https://www.statmethods.net/management/merging.html
+- http://plyr.had.co.nz/
+
+## Join_all
+
+```{r}
+library(plyr)
+
+df1 <- data.frame(id=sample(1:10), x=rnorm(10))
+df2 <- data.frame(id=sample(1:10), y=rnorm(10))
+df3 <- data.frame(id=sample(1:10), z=rnorm(10))
+
+df_list <- list(df1,df2,df3)
+join_all(df_list)
+```
+
+NOTE: Errors with **plyr & dplyr**
+
+You have loaded plyr after dplyr - this is likely to cause problems.
+If you need functions from both plyr and dplyr, please load plyr first, then dplyr:
+
+**library(plyr); library(dplyr)**
+
+
+NOW:
+Practical R Exercises in swirl Part 2
+
+During this week of the course you should complete the following lessons in the **Getting and Cleaning Data** swirl course:
+
+1. Manipulating Data with dplyr
+1. Grouping and Chaining with dplyr
+1. Tidying Data with tidyr (ONLY THIS LEFT #3)
+
+
+## Tidying Data with tidyr - Swirl
+
+For more info: http://vita.had.co.nz/papers/tidy-data.pdf
+
+### Gather is retired!
+
+
+## Separate
+
+```{r}
+?separate
+```
+
+```
+students2 %>%
+  gather(sex_class, count, -grade) %>%
+  separate(col = sex_class, into = c("sex", "class")) %>%
+  print
+```
+
+
+
+
+
+
 
 
 
